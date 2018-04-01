@@ -14,7 +14,7 @@ This will create a panel with the specified type. Currently there are 6 types of
 * `textentry` is mostly used instead of writing a bunch of code. Also has a few callback functions.
 * `html` has a custom scroll function designed for HTML panels.
 
-## Panel structure
+### Panel structure
 A panel is basically a table of variables and functions.
 This means that you can also store your own functions and variables if needed.
 There are a few default functions that a panel has once created, these should not be overriden.
@@ -51,9 +51,9 @@ Panel.StopHover()             -- Called when the cursor moves out of this panel
 Panel.Remove()                -- Removes this panel
 ```
 
-## A simple APP using GPnl
+### A simple APP using GPnl
 Let's imagine the following code is placed in "gphone/gapps/testapp.lua".
-The GPhone addon will automatically add it to the App list once the map loads.
+The GPhone will automatically add it to the App-list once the map loads.
 
 ```lua
 APP.Name        = "TestApp"                       -- The name of the App
@@ -66,13 +66,13 @@ APP.Run = (function( frame, w, h ) -- Called when the App is first opened
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
 	end
 	
-	local button = GPnl.AddPanel( frame, "button" )
+	local button = GPnl.AddPanel( frame, "button" ) -- Creates a panel of "button" type
 	button.SetPos( 0, 64 )
 	button.SetSize( 64, 64 )
 	function general.Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, button.Color or Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, 0, w, h, button.Color or Color( 255, 255, 255, 255 ) ) -- Paint the button using the color or white
 	end
-	function button.OnClick()
+	function button.OnClick() -- When we click, change the Color property
 		button.Color = Color( 255, 0, 0, 255 )
 	end
 end)
@@ -87,3 +87,33 @@ end)
 This App obviously doesn't do that much, so the next sections will go into more detail on different features.
 
 ## The GPhone library
+The GPhone library is primarily used to make it easier developers when creating Apps.
+Listed below are a few useful functions you can use inside or outside an App.
+```lua
+GPhone.Vibrate()                                  -- Makes the phone physically vibrate
+
+GPhone.SaveData( key, value )                     -- Save the data with the specific key
+GPhone.GetData( key, def )                        -- Retrieve the data with the specific key or def if nothing was found
+
+GPhone.RunApp( name )                             -- Run the app with the specific name
+GPhone.StopApp( name )                            -- Stop the app with the specific name
+
+GPhone.FocusApp( name )                           -- Focus the app with the specific name
+GPhone.FocusHome()                                -- Focus the home screen
+
+GPhone.InstallApp( name )                         -- Install the specific app
+GPhone.UninstallApp( name )                       -- Uninstalls the app
+
+GPhone.InputText( enter, change, cancel, text )   -- Start a text-input with enter, change and cancel functions
+GPhone.CloseInput()                               -- Close the text-input (doesn't call the cancel function)
+string = GPhone.GetInputText()                    -- Get the text from the text-input
+
+GPhone.StartMusic( url )                          -- Start playing music from the URL
+GPhone.StopMusic()                                -- Stop any playing music
+GPhone.ToggleMusic( play )                        -- Pause or play music
+GPhone.ChangeVolume( vol )                        -- Change the music volume (0-1)
+table = GPhone.GetMusic()                         -- Returns a table containing data for the music
+
+GPhone.DownloadImage( url, size, hack, css )      -- Downloads an image from the provided URL with size
+GPhone.GetImage( url )                            -- Gets the downloaded image or a callback texture if not found
+```
