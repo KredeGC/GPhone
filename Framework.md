@@ -7,38 +7,40 @@ Anyone with knowledge of Derma will probably find the App structure familiar.
 The GPnl library contains the default functions for creating panels for an App.
 Currently the only function in the GPnl library is `GPnl.AddPanel(parent, type)`.
 This will create a panel with the specified type. Currently there are 6 types of panels:
-* frame
-* panel
-* scroll
-* button
-* textentry
-* html
+* `frame` is the most basic panel and has no default Paint function. This is the best panel to use if you want to customize it fully.
+* `panel` is good for creating simple panels.
+* `scroll` is used when creating scrollable objects.
+* `button` has a default Paint function with specified text inside.
+* `textentry` is mostly used instead of writing a bunch of code. Also has a few callback functions.
+* `html` has a custom scroll function designed for HTML panels.
 
 ## Panel structure
 A panel is basically a table of variables and functions.
 This means that you can also store your own functions and variables if needed.
-There are a few default functions that a panel has once created.
+There are a few default functions that a panel has once created, these should not be overriden.
 ```lua
 Panel.SetVisible( bool )      -- Whether the panel should be visible or not (chil panels won't be drawn)
 bool = Panel.GetVisible()     -- Whether the panel is currently visible or not
 
 Panel.SetPos( x, y )          -- Sets the x and y coordinates of the panel
-x,y = Panel.GetPos()          -- Gets the x and y coordinates of the panel
+x,y = Panel.GetPos()          -- Returns the x and y coordinates of the panel
 
 Panel.SetWidth( w )           -- Sets the width of the panel
-w = Panel.GetWidth()          -- Gets the width of the panel
+w = Panel.GetWidth()          -- Returns the width of the panel
 
 Panel.SetHeight( h )          -- Sets the height of the panel
-h = Panel.GetHeight()         -- Gets the height of the panel
+h = Panel.GetHeight()         -- Returns the height of the panel
 
 Panel.SetSize( w, h )         -- Sets the width and height of the panel
-w,h = Panel.GetSize()         -- Gets the width and height of the panel
+w,h = Panel.GetSize()         -- Returns the width and height of the panel
 
 Panel.Clear()                 -- Removes all children from the panel
 
-parent = Panel.Getparent()    -- Gets the parent of the panel
-child = Panel.GetChildren()   -- Gets all the children from the panel
-
+parent = Panel.Getparent()    -- Returns the parent of the panel
+child = Panel.GetChildren()   -- Returns all the children from the panel
+```
+There are also some functions that you can override:
+```lua
 Panel.Paint( x, y, w, h )     -- Function to draw on the panel (x and y are not needed unless you change the viewport)
 Panel.OnClick()               -- Called when the user left-clicks on this panel
 Panel.OnScroll( num )         -- Called when the user scrolls with his mouse (only works on scroll-type panels)
@@ -83,3 +85,5 @@ end)
 ```
 
 This App obviously doesn't do that much, so the next sections will go into more detail on different features.
+
+## The GPhone library
