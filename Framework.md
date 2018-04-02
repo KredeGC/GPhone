@@ -1,6 +1,6 @@
 # GPhone modding documentation
 The GPhone comes with a whole bunch of features that are readily available
-for modders and scripters to utilize in creating Apps and dependencies.The addon comes with an APP-framework and the GPnl and GPhone library.
+for modders and scripters to utilize in creating Apps and mods that have GPhone support.The addon comes with an APP-framework and the GPnl and GPhone library.
 Anyone with knowledge of Lua and Derma will probably find the App structure familiar.
 
 ## The GPnl library
@@ -62,25 +62,26 @@ APP.Negative    = false                           -- Whether the App should use 
 APP.Fullscreen  = false                           -- Whether the App runs in fullscreen or not
 APP.Icon        = "https://example.com/icon.png"  -- The icon. Can point to a local file or an online file
 APP.Run = (function( frame, w, h ) -- Called when the App is first opened
-	function frame:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
-	end
-	
-	local button = GPnl.AddPanel( frame, "button" ) -- Creates a panel of "button" type
-	button:SetPos( 0, 64 )
-	button:SetSize( 64, 64 )
-	function general:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, button.Color or Color( 255, 255, 255, 255 ) ) -- Paint the button using the color or white
-	end
-	function button:OnClick() -- When we click, change the Color property
-		button.Color = Color( 255, 0, 0, 255 )
-	end
+    function frame:Paint( x, y, w, h )
+        draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
+    end
+    
+    local button = GPnl.AddPanel( frame, "button" ) -- Creates a panel of type "button"
+    button:SetPos( 32, 32 )
+    button:SetSize( w - 64, 64 )
+    button.Color = Color( 0, 255, 0 ) -- Green color
+    function button:Paint( x, y, w, h )
+        draw.RoundedBox( 0, 0, 0, w, h, button.Color ) -- Paint the button using the color
+    end
+    function button:OnClick() -- Called when we click
+        button.Color = Color( 255, 0, 0 ) -- Red color
+    end
 end)
 APP.Think = (function( frame, w, h ) -- Called every time the SWEP.Think function is called
-	print("thonk")
+    print("thonk")
 end)
 APP.Stop = (function( frame ) -- Called when the App is closed
-	print("closed")
+    print("closed")
 end)
 ```
 
