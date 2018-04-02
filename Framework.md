@@ -1,23 +1,23 @@
 # GPhone modding documentation
 The GPhone comes with a whole bunch of features that are readily available
-for modders and scripters to utilize in creating apps and mods.The addon comes with the APP-framework and the GPnl and GPhone library.
-Anyone with knowledge of Derma will probably find the App structure familiar.
+for modders and scripters to utilize in creating Apps and dependencies.The addon comes with an APP-framework and the GPnl and GPhone library.
+Anyone with knowledge of Lua and Derma will probably find the App structure familiar.
 
 ## The GPnl library
 The GPnl library contains the default functions for creating panels for an App.
-Currently the only function in the GPnl library is `GPnl.AddPanel(parent, type)`.
-This will create a panel with the specified type. Currently there are 6 types of panels:
-* `frame` is the most basic panel and has no default Paint function. This is the best panel to use if you want to customize it fully.
-* `panel` is good for creating simple panels.
-* `scroll` is used when creating scrollable objects.
+Currently the only 2 functions in the library is `GPnl.AddPanel(parent, type)` and `GPnl.GetTypes()`.
+`GPnl.AddPanel()` will create a panel with the specified type inside the parent panel. Currently there are 6 types of panels:
+* `frame` is the most basic panel with nothing changed. This is the best panel to use if you want to customize it fully.
+* `panel` is good for creating simple panels, it has a default Paint function.
 * `button` has a default Paint function with specified text inside.
-* `textentry` is mostly used instead of writing a bunch of code. Also has a few callback functions.
-* `html` has a custom scroll function designed for HTML panels.
+* `scroll` is used when creating scrollable objects and calls the `OnScroll()` function.
+* `textentry` is a preset for an editable text-field. Has a few callback functions like `OnEnter(value)`, `OnChange(value)` and `OnCancel()`.
+* `html` has an HTML-panel when initialized, also has a non-overridable scroll function. `Init()` needs to be called after setting the size of the panel.
 
-### Panel structure
-A panel is basically a table of variables and functions.
-This means that you can also store your own functions and variables if needed.
-There are a few default functions that a panel has once created, these should not be overriden.
+### Default panel functions
+A panel is basically a table consisting of variables and functions.
+This means that you can store your own functions and variables if needed.
+There are a few default functions that a panel has once created, these should not be overriden:
 ```lua
 Panel.SetVisible( bool )      -- Whether the panel should be visible or not (chil panels won't be drawn)
 bool = Panel.GetVisible()     -- Whether the panel is currently visible or not
@@ -35,23 +35,23 @@ Panel.SetSize( w, h )         -- Sets the width and height of the panel
 w,h = Panel.GetSize()         -- Returns the width and height of the panel
 
 Panel.Clear()                 -- Removes all children from the panel
+Panel.Remove()                -- Removes this panel
 
 parent = Panel.Getparent()    -- Returns the parent of the panel
 child = Panel.GetChildren()   -- Returns all the children from the panel
 ```
-There are also some functions that you can override:
+There are also a few callback functions that you can override:
 ```lua
 Panel.Paint( x, y, w, h )     -- Function to draw on the panel (x and y are not needed unless you change the viewport)
 Panel.OnClick()               -- Called when the user left-clicks on this panel
 Panel.OnScroll( num )         -- Called when the user scrolls with his mouse (only works on scroll-type panels)
+Panel.OnRemove()              -- Called before this panel is removed (no child panels are removed at this point)
 
 Panel.Hover()                 -- Called when the cursor moves over this panel
 Panel.StopHover()             -- Called when the cursor moves out of this panel
-
-Panel.Remove()                -- Removes this panel
 ```
 
-### A simple APP using GPnl
+## A simple APP using GPnl
 Let's imagine the following code is placed in "gphone/gapps/testapp.lua".
 The GPhone will automatically add it to the App-list once the map loads.
 
