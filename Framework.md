@@ -5,7 +5,7 @@ Anyone with knowledge of Lua and Derma will probably find the App structure fami
 
 ## The GPnl library
 The GPnl library contains the default functions for creating panels for an App.
-Currently the only 2 functions in the library is `GPnl.AddPanel(parent, type)` and `GPnl.GetTypes()`.
+Currently the only 2 functions in the library are `GPnl.AddPanel(parent, type)` and `GPnl.GetTypes()`.
 `GPnl.AddPanel()` will create a panel with the specified type inside the parent panel. Currently there are 6 types of panels:
 * `frame` is the most basic panel with nothing changed. This is the best panel to use if you want to customize it fully.
 * `panel` is good for creating simple panels, it has a default Paint function.
@@ -19,36 +19,36 @@ A panel is basically a table consisting of variables and functions.
 This means that you can store your own functions and variables if needed.
 There are a few default functions that a panel has once created, these should not be overriden:
 ```lua
-Panel.SetVisible( bool )      -- Whether the panel should be visible or not (chil panels won't be drawn)
-bool = Panel.GetVisible()     -- Whether the panel is currently visible or not
+Panel:SetVisible( bool )      -- Whether the panel should be visible or not (chil panels won't be drawn)
+bool = Panel:GetVisible()     -- Whether the panel is currently visible or not
 
-Panel.SetPos( x, y )          -- Sets the x and y coordinates of the panel
-x,y = Panel.GetPos()          -- Returns the x and y coordinates of the panel
+Panel:SetPos( x, y )          -- Sets the x and y coordinates of the panel
+x,y = Panel:GetPos()          -- Returns the x and y coordinates of the panel
 
-Panel.SetWidth( w )           -- Sets the width of the panel
-w = Panel.GetWidth()          -- Returns the width of the panel
+Panel:SetWidth( w )           -- Sets the width of the panel
+w = Panel:GetWidth()          -- Returns the width of the panel
 
-Panel.SetHeight( h )          -- Sets the height of the panel
-h = Panel.GetHeight()         -- Returns the height of the panel
+Panel:SetHeight( h )          -- Sets the height of the panel
+h = Panel:GetHeight()         -- Returns the height of the panel
 
-Panel.SetSize( w, h )         -- Sets the width and height of the panel
-w,h = Panel.GetSize()         -- Returns the width and height of the panel
+Panel:SetSize( w, h )         -- Sets the width and height of the panel
+w,h = Panel:GetSize()         -- Returns the width and height of the panel
 
-Panel.Clear()                 -- Removes all children from the panel
-Panel.Remove()                -- Removes this panel
+Panel:Clear()                 -- Removes all children from the panel
+Panel:Remove()                -- Removes this panel
 
-parent = Panel.Getparent()    -- Returns the parent of the panel
-child = Panel.GetChildren()   -- Returns all the children from the panel
+parent = Panel:Getparent()    -- Returns the parent of the panel
+child = Panel:GetChildren()   -- Returns all the children from the panel
 ```
 There are also a few callback functions that you can override:
 ```lua
-Panel.Paint( x, y, w, h )     -- Function to draw on the panel (x and y are not needed unless you change the viewport)
-Panel.OnClick()               -- Called when the user left-clicks on this panel
-Panel.OnScroll( num )         -- Called when the user scrolls with his mouse (only works on scroll-type panels)
-Panel.OnRemove()              -- Called before this panel is removed (no child panels are removed at this point)
+Panel:Paint( x, y, w, h )     -- Function to draw on the panel (x and y are not needed unless you change the viewport)
+Panel:OnClick()               -- Called when the user left-clicks on this panel
+Panel:OnScroll( num )         -- Called when the user scrolls with his mouse (only works on scroll-type panels)
+Panel:OnRemove()              -- Called before this panel is removed (no child panels are removed at this point)
 
-Panel.Hover()                 -- Called when the cursor moves over this panel
-Panel.StopHover()             -- Called when the cursor moves out of this panel
+Panel:Hover()                 -- Called when the cursor moves over this panel
+Panel:StopHover()             -- Called when the cursor moves out of this panel
 ```
 
 ## A simple APP using GPnl
@@ -62,17 +62,17 @@ APP.Negative    = false                           -- Whether the App should use 
 APP.Fullscreen  = false                           -- Whether the App runs in fullscreen or not
 APP.Icon        = "https://example.com/icon.png"  -- The icon. Can point to a local file or an online file
 APP.Run = (function( frame, w, h ) -- Called when the App is first opened
-	function frame.Paint( x, y, w, h )
+	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
 	end
 	
 	local button = GPnl.AddPanel( frame, "button" ) -- Creates a panel of "button" type
-	button.SetPos( 0, 64 )
-	button.SetSize( 64, 64 )
-	function general.Paint( x, y, w, h )
+	button:SetPos( 0, 64 )
+	button:SetSize( 64, 64 )
+	function general:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, button.Color or Color( 255, 255, 255, 255 ) ) -- Paint the button using the color or white
 	end
-	function button.OnClick() -- When we click, change the Color property
+	function button:OnClick() -- When we click, change the Color property
 		button.Color = Color( 255, 0, 0, 255 )
 	end
 end)
