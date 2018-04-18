@@ -1,4 +1,5 @@
 APP.Name = "StormFox"
+APP.Author = "Dickson"
 APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/weather.png"
 APP.Run = (function( frame, w, h )
 	function frame:Paint( x, y, w, h )
