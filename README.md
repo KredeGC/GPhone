@@ -17,17 +17,17 @@ Batteries not included."
 
 
 ## Features
-An iPhone (Duh).
-Colorable cover (Changes with weaponcolor).
-Colorable cursor (Changes with playercolor).
-APP Api - Uses the same syntax as Derma Panels.
-Custom cover materials.
-C_model hands.
-Online background and app-icon support.
-Web browser support.
-Online and offline music support.
-Custom flashlight.
-Serverside saving (So greedy admins can put a price tag on apps!).
+* An iPhone (Duh).
+* Colorable cover (Changes with weaponcolor).
+* Colorable cursor (Changes with playercolor).
+* APP Api - Uses the same syntax as Derma Panels.
+* Custom cover materials.
+* C_model hands.
+* Online background and app-icon support.
+* Web browser support.
+* Online and offline music support.
+* Custom flashlight.
+* Serverside saving (So greedy admins can put a price tag on apps!).
 
 
 
