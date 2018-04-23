@@ -20,7 +20,7 @@ Batteries not included."
 * An iPhone (Duh).
 * Colorable cover (Changes with weaponcolor).
 * Colorable cursor (Changes with playercolor).
-* APP Api - Uses the same syntax as Derma Panels.
+* App framework - Uses the same syntax as Derma Panels.
 * Custom cover materials.
 * C_model hands.
 * Online background and app-icon support.
