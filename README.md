@@ -33,7 +33,7 @@ Serverside saving (So greedy admins can put a price tag on apps!).
 
 ## App Creation
 Please consult the manual for further information.
-And for all you lazy bums [here's the link]().
+And for all you lazy bums [here's the link](https://github.com/KredeGC/GPhone/wiki).
 
 
 
