@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	$basetexture		"models/nitro/iphone06"
+	$envmapcontrast		"0.5"
+	$selfillum		"1"
+}

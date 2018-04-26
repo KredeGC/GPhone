@@ -1,0 +1,11 @@
+"VertexLitGeneric"
+{
+	"$basetexture"	"models/nitro/iphone_case"
+	$bumpmap	"models/nitro/iphone_case_normal"
+
+	$phong 	"1"
+	$phongexponent "33" 
+	$phongboost "6" 
+	$phongfresnelranges "[0.05 0.5 1]" 
+
+}
