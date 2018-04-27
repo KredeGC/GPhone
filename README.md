@@ -38,6 +38,6 @@ And for all you lazy bums [here's the link](https://github.com/KredeGC/GPhone/wi
 
 
 ## Credits
-Krede/Author - Coding everything.
-Steve Jobs - Being dead.
-Garry Newmann - Starting the trend of putting his name on everything.
+* Krede/Author - Coding everything.
+* Steve Jobs - Being dead.
+* Garry Newmann - Starting the trend of putting his name on everything.
