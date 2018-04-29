@@ -60,6 +60,19 @@ function APP.Run( frame, w, h )
 			end
 		end
 		
+		local wallpaper = GPnl.AddPanel( footer )
+		wallpaper:SetPos( 64, 0 )
+		wallpaper:SetSize( footer:GetWidth()-128, 64 )
+		function wallpaper:Paint( x, y, w, h )
+			draw.SimpleText("Set As Background", "GPMedium", w/2, h/2, Color(75, 170, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		function wallpaper:OnClick()
+			if file.Exists(pic, "DATA") then
+				GPhone.SaveData("background", "data/"..pic)
+				GPhone.DownloadImage( "data/"..pic, 512, true )
+			end
+		end
+		
 		local back = GPnl.AddPanel( header )
 		back:SetPos( 0, 0 )
 		back:SetSize( 64, 64 )

@@ -93,7 +93,7 @@ hook.Add("PostPlayerDraw", "DrawGFlashlight", function(ply)
 			local attach = ply:GetAttachment(attach_id)
 			if !attach then return end
 			
-			pos,ang = attach.Pos,attach.Ang
+			local pos,ang = attach.Pos,attach.Ang
 			
 			pos = pos + ang:Forward() * wep.WorldModelInfo.pos.x + ang:Right() * wep.WorldModelInfo.pos.y + ang:Up() * wep.WorldModelInfo.pos.z
 			pos = pos + ang:Up()*1.9 + ang:Forward()*0.6 + ang:Right()*1.1
@@ -111,18 +111,19 @@ hook.Add("PostPlayerDraw", "DrawGFlashlight", function(ply)
 	end
 end)
 
-CurrentMousePos = {x = GPhone.Width/2, y = GPhone.Height/2}
-
 hook.Add("InputMouseApply", "GPhoneMousePos", function( cmd, x, y, angle )
 	local wep = LocalPlayer():GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "weapon_gphone" and GPhone.CursorEnabled then
-		local sens = GetConVar("gphone_sensitivity"):GetFloat() or 4.6
+		local cv = GetConVar("gphone_sensitivity")
+		local sens = cv and cv:GetFloat() or 4.6
 		
 		local ychange = y * sens * 0.1
 		local xchange = x * sens * 0.1
 		
-		CurrentMousePos.x = math.Clamp(CurrentMousePos.x + xchange, -10*2, GPhone.Width + 12*2)
-		CurrentMousePos.y = math.Clamp(CurrentMousePos.y + ychange, -95*2, GPhone.Height + 120*2)
+		local x = math.Clamp(GPhone.CursorPos.x + xchange, -10*2, GPhone.Width + 12*2)
+		local y = math.Clamp(GPhone.CursorPos.y + ychange, -95*2, GPhone.Height + 98*2)
+		
+		GPhone.CursorPos = {x = x, y = y}
 		
 		cmd:SetViewAngles( angle )
 		 
@@ -659,7 +660,7 @@ function InitGPhoneAppCreator()
 			local px,py = self:LocalToScreen( self:GetPos() )
 			local x = mx - px
 			local y = my - py
-			local oldpos = CurrentMousePos
+			local oldpos = GPhone.CursorPos
 			
 			local function sortChildren( pnl )
 				local children = {}
@@ -724,11 +725,11 @@ function InitGPhoneAppCreator()
 				end
 			end
 			
-			CurrentMousePos = {x = x, y = y}
+			GPhone.CursorPos = {x = x, y = y}
 			local pnl = GPAppCreator.Frame
 			local children = sortChildren( table.Copy(pnl) )
 			pressChildren( children )
-			CurrentMousePos = oldpos
+			GPhone.CursorPos = oldpos
 		end
 	end
 	function Panel:Paint()
@@ -773,7 +774,7 @@ function InitGPhoneAppCreator()
 	end
 end
 
-hook.Add("PreRender", "GPhoneAppCreatorInput", function()
+--[[hook.Add("PreRender", "GPhoneAppCreatorInput", function()
 	if input.IsKeyDown(KEY_B) and input.IsKeyDown(KEY_LCONTROL) and !b_pressed then
 		b_pressed = true
 		if IsValid(GPAppCreator) then
@@ -784,4 +785,4 @@ hook.Add("PreRender", "GPhoneAppCreatorInput", function()
 	elseif !input.IsKeyDown(KEY_B) and b_pressed then
 		b_pressed = nil
 	end
-end)
+end)]]

@@ -64,10 +64,28 @@ function APP.Run( frame, w, h )
 		
 		draw.SimpleText(game.GetMap(), "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
+	
+	local refresh = GPnl.AddPanel( header )
+	refresh:SetPos( w - 64, 0 )
+	refresh:SetSize( 64, 64 )
+	function refresh:Paint( x, y, w, h )
+		surface.SetDrawColor(50, 50, 50)
+		surface.SetTexture( surface.GetTextureID( "gui/html/refresh" ) )
+		local ct = CurTime()
+		
+		if (self.Delay or 0) < ct then
+			surface.DrawTexturedRect( 0, 0, w, h )
+		else
+			local p = (self.Delay - ct)*720
+			surface.DrawTexturedRectRotated( w/2, h/2, w, h, p )
+		end
+	end
+	function refresh:OnClick()
+		self.Delay = CurTime() + 0.5
+		mat,offset,dist = LoadMapRT( true )
+	end
 end
 
-local bMapRT = nil
-local bMapMat = nil
 
 function realToScreenPos(x, y, size, offx, offy, max)
 	local px,py = (x - offx),(y - offy)
@@ -83,19 +101,27 @@ function screenToRealPos(x, y, size, offx, offy, max)
 	return y,x
 end
 
-function LoadMapRT()
+function LoadMapRT( reset )
 	local size = 512
+	local offset,dist = 0,0
 	
-	bMapRT = GetRenderTarget("GPhoneMapRT", size, size, false)
+	local bMapRT = GetRenderTarget("GPhoneMapRT", size, size, false)
 	
-	if file.Exists("maps/"..game.GetMap()..".jpg", "DATA") and file.Exists("maps/"..game.GetMap()..".txt", "DATA") then
+	local oldDraw = nil
+	LocalPlayer().ShouldDisableLegs = true
+	if EnhancedCamera then
+		oldDraw = EnhancedCamera.ShouldDraw
+		EnhancedCamera.ShouldDraw = function() return false end
+	end
+	
+	if !reset and file.Exists("maps/"..game.GetMap()..".jpg", "DATA") and file.Exists("maps/"..game.GetMap()..".txt", "DATA") then
 		local r = file.Read("maps/"..game.GetMap()..".txt", "DATA")
 		local data = util.JSONToTable(r)
 		
 		offset = data.offset
 		dist = data.dist
 	else
-		local ratio = 16384/size
+		local ratio = 16384 / size
 		
 		render.PushRenderTarget(bMapRT, 0, 0, size, size)
 		
@@ -107,8 +133,8 @@ function LoadMapRT()
 		local ang = Angle(90,0,0)
 		
 		if bit.band( util.PointContents( Vector(0, 0, 0) ), CONTENTS_SOLID ) != CONTENTS_SOLID then
-			local trace = util.TraceLine( {start = Vector(0,0,0), endpos = Vector(0, 0, 16384*2), mask = MASK_SOLID_BRUSHONLY} )
-			pos = trace.HitPos + Vector(0,0,-8)
+			local trace = util.TraceLine( {start = Vector(0, 0, 0), endpos = Vector(0, 0, 16384*2), mask = MASK_SOLID_BRUSHONLY} )
+			pos = trace.HitPos + Vector(0, 0, -8)
 		end
 		
 		rendering_gphone_map = true
@@ -229,7 +255,12 @@ function LoadMapRT()
 		render.PopRenderTarget()
 	end
 	
-	bMapMat = Material("data/maps/"..game.GetMap()..".jpg")
+	LocalPlayer().ShouldDisableLegs = false
+	if EnhancedCamera and oldDraw then
+		EnhancedCamera.ShouldDraw = oldDraw
+	end
+	
+	local bMapMat = Material("data/maps/"..game.GetMap()..".jpg")
 	
 	return bMapMat,offset,dist
 end

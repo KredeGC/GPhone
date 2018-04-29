@@ -7,11 +7,11 @@ if !GPhone then
 	GPhone.CachedImages = {}
 	GPhone.MusicStream = {}
 	GPhone.AwaitingCalls = {}
+	
 	GPhone.HTML = {}
 	GPhone.Log = {}
 	GPhone.Desk = {
 		Spacing = 24,
-		Rows = 4,
 		Offset = 40
 	}
 	GPhone.AppScreen = {
@@ -25,13 +25,16 @@ if !GPhone then
 	GPhone.CurrentFrame = nil
 	GPhone.MovingApp = nil
 	GPhone.MoveMode = nil
-	GPhone.CursorEnabled = false
 	GPhone.MusicURL = nil
 	GPhone.InputField = nil
 	GPhone.VoiceChatter = nil
+	
+	GPhone.CursorEnabled = false
+	GPhone.Page = 1
 	GPhone.Width = 560
 	GPhone.Height = 830
 	GPhone.Ratio = GPhone.Width / GPhone.Height
+	GPhone.CursorPos = {x = GPhone.Width/2, y = GPhone.Height/2}
 end
 
 local function parentPos( p )
@@ -44,22 +47,26 @@ local function parentPos( p )
 	end
 end
 
-function GPhone.GetAppSize()
+function GPhone.GetAppSize(spacing, rows)
+	local cv = GetConVar("gphone_rows")
 	local w = GPhone.Width
-	local spacing = GPhone.Desk.Spacing
-	local rows = GPhone.Desk.Rows
+	local spacing = spacing or GPhone.Desk.Spacing
+	local rows = rows or cv and cv:GetInt() or 4
 	
 	return (w/rows)-spacing*(1+(1/rows))
 end
 
 function GPhone.GetAppPos() -- Became tired of doing all this manually... This is a much better solution since it's dynamic
+	local cv = GetConVar("gphone_rows")
 	local w = GPhone.Width
+	local h = GPhone.Height
 	local spacing = GPhone.Desk.Spacing
-	local rows = GPhone.Desk.Rows
+	local rows = cv and cv:GetInt() or 4
 	local offset = GPhone.Desk.Offset
-	local size = GPhone.GetAppSize()
+	local size = GPhone.GetAppSize(spacing, rows)
 	
-	local tbl = {}
+	local windows = {{}}
+	local page = 1
 	local posx = 0
 	local posy = 0
 	
@@ -74,10 +81,26 @@ function GPhone.GetAppPos() -- Became tired of doing all this manually... This i
 			posy = posy + 1
 		end
 		
-		tbl[k] = {x = (posx-1)*(size+spacing)+spacing, y = posy*(size+36)+offset+spacing, size = size, app = appid}
+		local x,y = (posx-1)*(size+spacing)+spacing, posy*(size+36)+offset+spacing
+		
+		if y + size >= h then
+			page = page + 1
+			windows[page] = {}
+			posx = 1
+			posy = 0
+			x,y = spacing, offset + spacing
+		end
+		
+		table.insert(windows[page], {x = x, y = y, size = size, app = appid})
 	end
 	
-	return tbl
+	return windows
+end
+
+function GPhone.GetPage( id )
+	local windows = GPhone.GetAppPos()
+	local page = windows[math.Clamp(id or GPhone.Page, 1, #windows)]
+	return page
 end
 
 function GPhone.AppThumbnail( appid )
@@ -184,7 +207,8 @@ end)
 
 
 net.Receive("GPhone_Load_Client", function(len)
-	if game.SinglePlayer() or GetConVar("gphone_sync"):GetBool() then
+	local cv = GetConVar("gphone_sync")
+	if game.SinglePlayer() or cv and cv:GetBool() then
 		if file.Exists("gphone/users/client.txt", "DATA") then
 			local tbl = util.JSONToTable( file.Read("gphone/users/client.txt", "DATA") )
 			GPhone.Data = tbl
@@ -245,18 +269,27 @@ end
 
 function GPhone.SaveData(name, v)
 	GPhone.Data[name] = v
-	net.Start( "GPhone_Change_Data" )
-		net.WriteTable( GPhone.Data )
-	net.SendToServer()
+	local cv = GetConVar("gphone_sync")
+	if !game.SinglePlayer() and (!cv or !cv:GetBool()) then
+		net.Start( "GPhone_Change_Data" )
+			net.WriteTable( GPhone.Data )
+		net.SendToServer()
+	else
+		file.Write("gphone/users/client.txt", util.TableToJSON(GPhone.Data))
+	end
 	return true
 end
 
 function GPhone.GetData(name, def)
-	if GPhone.Data[name] then
-		return GPhone.Data[name]
-	else
-		return def or false
-	end
+	return GPhone.Data[name] or def or false
+end
+
+function GPhone.BroadcastData(name, v)
+	
+end
+
+function GPhone.ReceiveData(name)
+	
 end
 
 function GPhone.GetPanel( name )
@@ -389,7 +422,8 @@ function GPhone.UninstallApp( name )
 end
 
 function GPhone.DownloadApp( url )
-	if !GetConVar("gphone_csapp"):GetBool() then return end
+	local cv = GetConVar("gphone_csapp")
+	if !cv or !cv:GetBool() then return end
 	local name = string.lower(url)
 	local name = string.gsub(name, "http://", "")
 	local name = string.gsub(name, "https://", "")
@@ -460,8 +494,18 @@ function GPhone.RenderCamera( fov, front, post )
 			end
 		end
 		
-		GPCamRendering = true
+		local oldDraw = nil
+		if front then
+			ply.ShouldDisableLegs = true
+			if EnhancedCamera then
+				oldDraw = EnhancedCamera.ShouldDraw
+				EnhancedCamera.ShouldDraw = function() return false end
+			end
+		end
+		
+		-- GPCamRendering = true
 		GPSelfieRendering = front
+		
 		render.RenderView({
 			x = 0,
 			y = 0,
@@ -481,7 +525,14 @@ function GPhone.RenderCamera( fov, front, post )
 		end
 		
 		GPSelfieRendering = false
-		GPCamRendering = false
+		-- GPCamRendering = false
+		
+		if front then
+			ply.ShouldDisableLegs = false
+			if EnhancedCamera and oldDraw then
+				EnhancedCamera.ShouldDraw = oldDraw
+			end
+		end
 		
 		render.PopRenderTarget()
 		
@@ -780,21 +831,41 @@ function GPhone.StartMusic( id )
 	GPhone.StopMusic()
 	GPhone.MusicURL = id or GPhone.MusicURL
 	
-	sound.PlayURL(GPhone.MusicURL, "noplay noblock", function(channel)
-		if IsValid( channel ) then
-			channel:SetVolume( GPhone.GetData("music_volume") or 1 )
-			channel:Play()
-			
-			if GPhone.MusicStream.Channel then
-				GPhone.MusicStream.Channel:Stop()
+	if string.StartWith(url, "http://") or string.StartWith(url, "https://") then
+		sound.PlayURL(GPhone.MusicURL, "noplay noblock", function(channel)
+			if IsValid(channel) then
+				channel:SetVolume( GPhone.GetData("music_volume") or 1 )
+				channel:Play()
+				
+				if GPhone.MusicStream.Channel then
+					GPhone.MusicStream.Channel:Stop()
+				end
+				
+				GPhone.MusicStream.URL = GPhone.MusicURL
+				GPhone.MusicStream.Playing = true
+				GPhone.MusicStream.Channel = channel
+				GPhone.MusicStream.Length = channel:GetLength()
 			end
-			
-			GPhone.MusicStream.URL = GPhone.MusicURL
-			GPhone.MusicStream.Playing = true
-			GPhone.MusicStream.Channel = channel
-			GPhone.MusicStream.Length = channel:GetLength()
-		end
-	end)
+		end)
+	else
+		sound.PlayFile(GPhone.MusicURL, "noplay noblock", function(channel)
+			if IsValid(channel) then
+				channel:SetVolume( GPhone.GetData("music_volume") or 1 )
+				channel:Play()
+				
+				if GPhone.MusicStream.Channel then
+					GPhone.MusicStream.Channel:Stop()
+				end
+				
+				GPhone.MusicStream.URL = GPhone.MusicURL
+				GPhone.MusicStream.Playing = true
+				GPhone.MusicStream.Channel = channel
+				GPhone.MusicStream.Length = channel:GetLength()
+			end
+		end)
+	end
+	
+	return true
 end
 
 function GPhone.StopMusic()
@@ -843,12 +914,16 @@ end
 
 function GPhone.DownloadImage( url, size, hack, style )
 	if GPhone.CachedImages[url] then return false end
-	if string.find(url, "http://") or string.find(url, "https://") then -- Local files
-		GPhone.CachedImages[url] = Material(url)
-	else
+	if string.StartWith(url, "http://") or string.StartWith(url, "https://") then -- Local files
 		local data = {URL = url, Size = size, SizeHack = hack, Style = style}
 		table.insert(GPhone.ImageHistory, data)
 		table.insert(GPhone.ImageQueue, data)
+	else
+		if string.EndsWith(url, "png") or string.EndsWith(url, "jpg") or string.EndsWith(url, "jpeg") then
+			GPhone.CachedImages[url] = Material(url, "smooth")
+		else
+			GPhone.CachedImages[url] = Material(url)
+		end
 	end
 end
 

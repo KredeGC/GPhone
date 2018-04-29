@@ -86,7 +86,7 @@ function APP.Run( frame, w, h )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 		
 		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
-		draw.SimpleText("Hold time: "..text, self:GetFont(), w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Hold time: "..text, self:GetFont(), w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	function hold:OnEnter( val )
 		if tonumber(val) then
@@ -117,6 +117,28 @@ function APP.Run( frame, w, h )
 	end
 	function toggle:OnChange( bool )
 		RunConsoleCommand("gphone_ampm", bool and 1 or 0)
+	end
+	
+	space = space + 64
+	
+	local brightness = GPnl.AddPanel( scroll, "textentry" )
+	brightness:SetSize( w, 64 )
+	brightness:SetPos( 0, space )
+	brightness:SetText( math.Round(GetConVar("gphone_brightness"):GetFloat()*100) )
+	function brightness:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
+		draw.SimpleText("Brightness: "..text.."%", self:GetFont(), w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	function brightness:OnEnter( val )
+		local val = tonumber(val)
+		if val then
+			local num = math.Clamp(val, 0, 100)
+			self:SetText( math.Round(num) )
+			RunConsoleCommand("gphone_brightness", math.Round(num/100, 2))
+		end
 	end
 	
 	space = space + 64
@@ -208,6 +230,21 @@ function APP.Run( frame, w, h )
 		GPhone.PrintLog()
 	end
 	
+	space = space + 64
+	
+	local imag = GPnl.AddPanel( scroll )
+	imag:SetSize( w, 64 )
+	imag:SetPos( 0, space )
+	function imag:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("Redownload Images", "GPMedium", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	function imag:OnClick()
+		RunConsoleCommand("gphone_redownloadimages")
+	end
+	
 	local header = GPnl.AddPanel( debugger )
 	header:SetPos( 0, 0 )
 	header:SetSize( w, 64 )
@@ -244,9 +281,28 @@ function APP.Run( frame, w, h )
 		surface.SetTexture( surface.GetTextureID( "vgui/entities/weapon_gphone" ) )
 		surface.DrawTexturedRect( 4, 16, w/2-8, w/2-8 )
 		
-		draw.SimpleText("GPhone 2.0", "GPTitle", w/2 + 4, 16, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("GPhone Remade", "GPTitle", w/2 + 4, 16, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		draw.SimpleText("Created by Krede", "GPMedium", w/2 + 4, 16 + 42, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		
+		if self.Update then
+			draw.SimpleText("Last update:", "GPMedium", w/2 + 4, 8 + w/2 - 36*2, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(self.Update, "GPMedium", w/2 + 4, 8 + w/2 - 36, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		end
 	end
+	
+	http.Fetch("https://steamcommunity.com/sharedfiles/filedetails/changelog/1370983401", function(body)
+		local start = string.find(body, "Update: ")
+		if start then
+			local stop = string.find(body, "@", start)
+			if stop then
+				local text = string.sub(body, start+8, stop-2)
+				content.Update = text
+			end
+		end
+	end,
+	function(err)
+		print(err)
+	end)
 	
 	local header = GPnl.AddPanel( about )
 	header:SetPos( 0, 0 )

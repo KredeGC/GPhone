@@ -308,7 +308,7 @@ local paneltypes = {
 		end
 		
 		function frame:OnClick()
-			local mx,my = CurrentMousePos.x,CurrentMousePos.y
+			local mx,my = GPhone.CursorPos.x,GPhone.CursorPos.y
 			local x,y = GPhone.GetHTMLPos( self, self:GetHTML(), mx, my )
 			
 			GPhone.PerformHTMLClick( self:GetHTML(), x, y )
@@ -388,7 +388,7 @@ hook.Add("PlayerBindPress", "PlayerScrollGPanel", function(ply, bind, pressed)
 				local max = table.Count(GPhone.Panels) - 1
 				GPhone.AppScreen.Scroll = math.Clamp(GPhone.AppScreen.Scroll + num, -max, 0)
 			elseif frame and frame.visible then
-				local x,y = CurrentMousePos.x,CurrentMousePos.y
+				local x,y = GPhone.CursorPos.x,GPhone.CursorPos.y
 				
 				local children = {}
 				local function scrollChildren( pnl )
@@ -415,6 +415,8 @@ hook.Add("PlayerBindPress", "PlayerScrollGPanel", function(ply, bind, pressed)
 				if pnl then
 					scrollParent( pnl )
 				end
+			else
+				GPhone.Page = math.Clamp(GPhone.Page - num, 1, #GPhone.GetAppPos())
 			end
 		end
 	end

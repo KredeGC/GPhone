@@ -8,9 +8,37 @@ util.AddNetworkString( "GPhone_VoiceCall_Request" )
 util.AddNetworkString( "GPhone_VoiceCall_Answer" )
 util.AddNetworkString( "GPhone_VoiceCall_Stop" )
 
-hook.Add("PlayerAuthed", "LoadGPhoneUserData", function(ply, stid)
+resource.AddFile( "materials/vgui/entities/weapon_gphone.vmt" )
+resource.AddFile( "materials/vgui/hud/phone.vmt" )
+
+resource.AddFile( "materials/models/weapons/c_garry_phone.vmt" )
+
+resource.AddFile( "models/weapons/c_garry_phone.mdl" )
+resource.AddFile( "models/nitro/iphone4.mdl" )
+
+local function addResources(dir)
+	local files,dirs = file.Find(dir.."/*", "GAME")
+	for _,v in pairs(files) do
+		print("Added: "..dir.."/"..v)
+		resource.AddSingleFile( dir.."/"..v )
+	end
+	
+	for _,v in pairs(dirs) do
+		addResources(dir.."/"..v)
+	end
+end
+
+addResources("materials/gphone")
+addResources("materials/models/nitro")
+addResources("sound/gphone")
+
+hook.Add("PlayerAuthed", "GPhoneLoadClientData", function(ply, stid)
 	local id = util.SteamIDTo64( ply:SteamID() )
-	if file.Exists("gphone/users/"..id..".txt", "DATA") then
+	if game.SinglePlayer() then
+		net.Start( "GPhone_Load_Client" )
+			net.WriteTable( {} )
+		net.Send( ply )
+	elseif file.Exists("gphone/users/"..id..".txt", "DATA") then
 		local str = file.Read("gphone/users/"..id..".txt", "DATA")
 		net.Start( "GPhone_Load_Client" )
 			net.WriteTable( util.JSONToTable(str) )
@@ -36,7 +64,8 @@ hook.Add("PlayerCanHearPlayersVoice", "GPhonePlayerVoiceChat", function( p1, p2 
 end)
 
 net.Receive("GPhone_Change_Data", function(len, ply)
-	if !game.SinglePlayer() and !GetConVar("gphone_sync"):GetBool() then
+	local cv = GetConVar("gphone_sync")
+	if !game.SinglePlayer() and (cv or !cv:GetBool()) then
 		local str = net.ReadTable()
 		local id = util.SteamIDTo64( ply:SteamID() )
 		file.Write("gphone/users/"..id..".txt", util.TableToJSON(str))

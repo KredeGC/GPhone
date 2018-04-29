@@ -52,6 +52,8 @@ function APP.Run( frame, w, h )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function screenshot:OnClick()
+		surface.PlaySound("npc/scanner/scanner_photo1.wav")
+		
 		GPhone.RenderCamera(90, frame.front, function(pos, ang)
 			local data = render.Capture( {
 				format = "jpeg",

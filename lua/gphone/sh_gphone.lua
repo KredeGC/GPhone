@@ -9,7 +9,11 @@ if CLIENT then
 end
 
 function GP.AddApp( name, tbl )
+	if type(tbl) != "table" then return false end
+	if !tbl.Name then return false end
+	if !tbl.Icon then return false end
 	GP.GetApps()[name] = tbl
+	return true
 end
 
 function GP.GetApp( name )
@@ -33,7 +37,10 @@ local function loadApps()
 		local r = file.Read("gpapps/"..v, "LUA")
 		RunString(r, v)
 		
-		GP.AddApp(name, APP)
+		local res = GP.AddApp(name, APP)
+		if !res then
+			print("[GPhone] Could not add app '"..name.."', possibly missing Name or Icon")
+		end
 		
 		APP = nil
 	end
@@ -47,7 +54,10 @@ local function loadApps()
 			local r = file.Read("gphone/apps/"..v, "DATA")
 			RunString(r, v)
 			
-			GP.AddApp(name, APP)
+			local res = GP.AddApp(name, APP)
+			if !res then
+				print("[GPhone] Could not add app '"..name.."', possibly missing Name or Icon")
+			end
 			
 			APP = nil
 		end
@@ -71,8 +81,8 @@ hook.Add("TranslateActivity", "GPhoneSelfieActivity", function(ply, act)
 	end
 end)
 
-CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow users to download apps via links")
-CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize users data with singleplayer")
+CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
+CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
 
 if SERVER then
 	hook.Add("PlayerAuthed", function(ply)
@@ -89,31 +99,66 @@ if SERVER then
 		net.Broadcast()
 	end)
 else
+	list.Add( "CursorMaterials", "effects/select_dot" )
+	list.Add( "CursorMaterials", "vgui/minixhair" )
+	list.Add( "CursorMaterials", "effects/wheel_ring" )
+	list.Add( "CursorMaterials", "gui/faceposer_indicator" )
+	list.Add( "CursorMaterials", "sprites/grip" )
+	
 	net.Receive("GPhone_Load_Apps", function(l)
 		local tbl = net.ReadTable()
 		loadApps()
 	end)
 	
 	if GetConVar("gphone_wepicon") == nil then
-		CreateClientConVar("gphone_wepicon", "1", true, true)
-	end
-	if GetConVar("gphone_ampm") == nil then
-		CreateClientConVar("gphone_ampm", "0", true, true)
+		CreateClientConVar("gphone_wepicon", "1", true, false, "Whether the phone should use a fancy weapon icon")
 	end
 	if GetConVar("gphone_blur") == nil then
-		CreateClientConVar("gphone_blur", "1", true, true)
+		CreateClientConVar("gphone_blur", "1", true, false, "Whether to use blur when focused")
+	end
+	if GetConVar("gphone_bob") == nil then
+		CreateClientConVar("gphone_bob", "1", true, false, "Amount of viewmodel bobbing")
 	end
 	if GetConVar("gphone_hints") == nil then
-		CreateClientConVar("gphone_hints", "1", true, true)
+		CreateClientConVar("gphone_hints", "1", true, false, "Enable or disable hints")
+	end
+	if GetConVar("gphone_ampm") == nil then
+		CreateClientConVar("gphone_ampm", "0", true, false, "Whether to use AM/PM or 24-hour clock")
 	end
 	if GetConVar("gphone_sf") == nil then
-		CreateClientConVar("gphone_sf", "1", true, true)
+		CreateClientConVar("gphone_sf", "1", true, false, "Enable StormFox support")
+	end
+	if GetConVar("gphone_rows") == nil then
+		CreateClientConVar("gphone_rows", "4", true, false, "Amount of rows per homescreen page")
 	end
 	if GetConVar("gphone_holdtime") == nil then
-		CreateClientConVar("gphone_holdtime", "0.4", true, true)
+		CreateClientConVar("gphone_holdtime", "0.4", true, false, "Left-click hold-time (in seconds)")
+	end
+	if GetConVar("gphone_brightness") == nil then
+		CreateClientConVar("gphone_brightness", "1", true, false, "Screen brightness (0-1)")
 	end
 	if GetConVar("gphone_sensitivity") == nil then
-		CreateClientConVar("gphone_sensitivity", "4", true, true)
+		CreateClientConVar("gphone_sensitivity", "4", true, false, "Cursor sensitivity")
+	end
+	if GetConVar("gphone_cursorsize") == nil then
+		CreateClientConVar("gphone_cursorsize", "30", true, false, "Cursor size")
+	end
+	if GetConVar("gphone_cursormat") == nil then
+		CreateClientConVar("gphone_cursormat", "effects/select_dot", true, false, "Cursor material")
+	end
+	
+	local function GPAdminSettingsPanel(panel)
+		panel:ClearControls()
+		
+		panel:AddControl("CheckBox", {
+			Label = "Allow players to download custom apps",
+			Command = "gphone_csapp"
+		})
+		
+		panel:AddControl("CheckBox", {
+			Label = "Enable singleplayer synchronization",
+			Command = "gphone_sync"
+		})
 	end
 
 	local function GPSettingsPanel(panel)
@@ -145,6 +190,29 @@ else
 		})
 		
 		panel:AddControl( "Slider", {
+			Label = "Viewmodel bobbing",
+			Command = "gphone_bob",
+			Type = "Float",
+			Min = 0,
+			Max = 4
+		})
+		
+		panel:AddControl( "Slider", {
+			Label = "Homescreen rows",
+			Command = "gphone_rows",
+			Min = 1,
+			Max = 6
+		})
+		
+		panel:AddControl( "Slider", {
+			Label = "Screen brightness",
+			Command = "gphone_brightness",
+			Type = "Float",
+			Min = 0,
+			Max = 1
+		})
+		
+		panel:AddControl( "Slider", {
 			Label = "Sensitivity",
 			Command = "gphone_sensitivity",
 			Type = "Float",
@@ -159,9 +227,19 @@ else
 			Min = 0.1,
 			Max = 1.5
 		})
+		
+		panel:AddControl( "Slider", {
+			Label = "Cursor size",
+			Command = "gphone_cursorsize",
+			Min = 2,
+			Max = 60
+		})
+		
+		panel:MatSelect( "gphone_cursormat", list.Get( "CursorMaterials" ), true, 0.25, 0.25 )
 	end
 
 	hook.Add("PopulateToolMenu", "GPhoneCvarsPanel", function()
 		spawnmenu.AddToolMenuOption("Options", "GPhone", "GPhone", "Settings", "", "", GPSettingsPanel)
+		spawnmenu.AddToolMenuOption("Options", "GPhone", "GPhoneAdmin", "Admin Settings", "", "", GPAdminSettingsPanel)
 	end)
 end
