@@ -26,14 +26,11 @@ Batteries not included."
 * Online background and app-icon support.
 * Web browser support.
 * Online and offline music support.
-* Custom flashlight.
-* Serverside saving (So greedy admins can put a price tag on apps!).
 
 
 
 ## App Creation
-Please consult the manual for further information.
-And for all you lazy bums [here's the link](https://github.com/KredeGC/GPhone/wiki).
+[here's a link](https://github.com/KredeGC/GPhone/wiki).
 
 
 
