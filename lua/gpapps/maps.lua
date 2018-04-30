@@ -13,7 +13,7 @@ function APP.Run( frame, w, h )
 	map:SetPos( 0, 64 )
 	map:SetSize( w, w )
 	function map:OnClick()
-		local mx,my = CurrentMousePos.x,CurrentMousePos.y
+		local mx,my = GPhone.CursorPos.x,GPhone.CursorPos.y
 		local point = GPnl.AddPanel( self )
 		point:SetPos( mx-16, my-32-64-GPhone.Desk.Offset )
 		point:SetSize( 32, 32 )

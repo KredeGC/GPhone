@@ -616,8 +616,6 @@ SWEP.ScreenInfo = {
 				GPhone.DebugFunction( frame.Paint, frame, frame.x, frame.y, frame.w, frame.h )
 			end
 			drawChildren( frame )
-			
-			render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, oldw, oldh)
 		else
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial( GPhone.GetImage( GPhone.Data.background ) )
@@ -718,6 +716,7 @@ function SWEP:ViewModelDrawn()
 	
 	self.PhoneModel:SetAngles(ang)
 	
+	self.PhoneModel:SetLOD(0)
 	self.PhoneModel:SetSkin(4)
 	self.PhoneModel:SetupBones()
 	self.PhoneModel:DrawModel()
@@ -822,7 +821,8 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 		render.PushRenderTarget(phonert)
 		render.Clear(0, 0, 0, 255, true, true)
 		cam.Start2D()
-			render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, ScrW(), ScrH())
+			local oldw,oldh = ScrW(),ScrH()
+			render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, oldw, oldh)
 			local x,y = GPhone.CursorPos.x,GPhone.CursorPos.y
 			local app = GP.GetApp( GPhone.CurrentApp )
 			local frame = GPhone.GetPanel(GPhone.CurrentApp)
@@ -835,6 +835,8 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 					GPhone.DebugFunction( wep.ScreenInfo.draw, wep, GPhone.Width, GPhone.Height - GPhone.Desk.Offset )
 				end
 			end
+			
+			render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, oldw, oldh)
 			
 			if GPhone.MovingApp then
 				local a = GP.GetApp( GPhone.MovingApp )
@@ -915,7 +917,7 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 				end
 			end
 			
-			render.SetViewPort(0, 0, ScrW(), ScrH())
+			render.SetViewPort(0, 0, oldw, oldh)
 		cam.End2D()
 		render.PopRenderTarget()
 	end

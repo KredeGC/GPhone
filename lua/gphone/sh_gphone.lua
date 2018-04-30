@@ -9,9 +9,7 @@ if CLIENT then
 end
 
 function GP.AddApp( name, tbl )
-	if type(tbl) != "table" then return false end
-	if !tbl.Name then return false end
-	if !tbl.Icon then return false end
+	if type(tbl) != "table" or !tbl.Name or !tbl.Icon then return false end
 	GP.GetApps()[name] = tbl
 	return true
 end
@@ -46,6 +44,8 @@ local function loadApps()
 	end
 	
 	if CLIENT and GetConVar("gphone_csapp"):GetBool() then
+		print("[GPhone] Loading clientside apps")
+		
 		local files = file.Find("gphone/apps/*.txt", "DATA")
 		for _,v in pairs(files) do
 			APP = {}
@@ -62,6 +62,8 @@ local function loadApps()
 			APP = nil
 		end
 	end
+	
+	print("[GPhone] App loading finished")
 end
 loadApps()
 -- hook.Add("PostGamemodeLoaded", "GPhoneInitApps", loadApps)
@@ -86,9 +88,9 @@ CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize
 
 if SERVER then
 	hook.Add("PlayerAuthed", function(ply)
-		net.Start("GPhone_LoadApps")
+		--[[net.Start("GPhone_LoadApps")
 			net.WriteTable({})
-		net.Broadcast()
+		net.Broadcast()]]
 	end)
 	
 	concommand.Add("gphone_reloadapps", function(ply)

@@ -19,7 +19,6 @@ resource.AddFile( "models/nitro/iphone4.mdl" )
 local function addResources(dir)
 	local files,dirs = file.Find(dir.."/*", "GAME")
 	for _,v in pairs(files) do
-		print("Added: "..dir.."/"..v)
 		resource.AddSingleFile( dir.."/"..v )
 	end
 	

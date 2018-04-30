@@ -292,6 +292,11 @@ function GPhone.ReceiveData(name)
 	
 end
 
+function GPhone.GetCursorPos()
+	local p = GPhone.CursorPos
+	return p.x,p.y
+end
+
 function GPhone.GetPanel( name )
 	local frame = GPhone.Panels[name]
 	if !frame then return false end
@@ -652,13 +657,25 @@ function GPhone.InputText( enter, change, cancel, starttext )
 end
 
 function GPhone.CloseInput()
-	if !GPhone.InputField or !IsValid(GPhone.InputField) or !IsValid(GPhone.InputField:GetParent()) then return false end
+	if !IsValid(GPhone.InputField) or !IsValid(GPhone.InputField:GetParent()) then return false end
 	GPhone.InputField:GetParent():Close()
+	return true
 end
 
 function GPhone.GetInputText()
-	if !GPhone.InputField or !IsValid(GPhone.InputField) then return false end
+	if !IsValid(GPhone.InputField) then return false end
 	return GPhone.InputField:GetValue()
+end
+
+function GPhone.SetCaretPos( pos )
+	if !IsValid(GPhone.InputField) then return false end
+	GPhone.InputField:SetCaretPos( pos )
+	return true
+end
+
+function GPhone.GetCaretPos()
+	if !IsValid(GPhone.InputField) then return 0 end
+	return GPhone.InputField:GetCaretPos()
 end
 
 function GPhone.CreateHTMLPanel( w, h, url )
@@ -898,9 +915,8 @@ end
 function GPhone.GetMusic()
 	if GPhone.MusicStream.Playing and GPhone.MusicStream.Channel then
 		return GPhone.MusicStream
-	else
-		return false
 	end
+	return false
 end
 
 function GPhone.ChangeVolume( dec )
@@ -925,6 +941,7 @@ function GPhone.DownloadImage( url, size, hack, style )
 			GPhone.CachedImages[url] = Material(url)
 		end
 	end
+	return true
 end
 
 function GPhone.GetImage( url )
