@@ -65,7 +65,7 @@ local function loadApps()
 	
 	print("[GPhone] App loading finished")
 end
-loadApps()
+--loadApps() Too Fast Cause convars are not created yet 'lua/gphone/sh_gphone.lua:46: attempt to index a nil value'
 -- hook.Add("PostGamemodeLoaded", "GPhoneInitApps", loadApps)
 
 local selfietranslate = {}
@@ -85,7 +85,7 @@ end)
 
 CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
 CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
-
+loadApps() -- now should not error 
 if SERVER then
 	hook.Add("PlayerAuthed", function(ply)
 		--[[net.Start("GPhone_LoadApps")
