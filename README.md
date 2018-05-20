@@ -17,8 +17,8 @@ Batteries not included."
 
 
 ## Links
-[Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=1370983401)
-[App Creation](https://github.com/KredeGC/GPhone/wiki)
+* [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=1370983401)
+* [App Creation](https://github.com/KredeGC/GPhone/wiki)
 
 
 
