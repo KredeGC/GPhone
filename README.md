@@ -9,7 +9,9 @@ Batteries not included."
 
 ## Customer reviews
 >"This screen is brighter than my future!" - Depressed guy
+
 >"Now i can contact mein Fürher more easily!" - Oberleutnant Jonis
+
 >"I don't even know how to use it!" - Average customer
 
 
