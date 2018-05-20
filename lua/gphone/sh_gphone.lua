@@ -1,6 +1,5 @@
-GP = GP or {}
-GP.Apps = GP.Apps or {}
-GP.DefaultApps = GP.DefaultApps or {"appstore", "settings", "camera", "photos", "contacts"}
+CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
+CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
 
 file.CreateDir("gphone/users")
 if CLIENT then
@@ -8,53 +7,25 @@ if CLIENT then
 	file.CreateDir("gphone/apps")
 end
 
-function GP.AddApp( name, tbl )
-	if type(tbl) != "table" or !tbl.Name or !tbl.Icon then return false end
-	GP.GetApps()[name] = tbl
-	return true
-end
-
-function GP.GetApp( name )
-	local app = GP.GetApps()[name]
-	return app or false
-end
-
-function GP.GetApps()
-	return GP.Apps
-end
-
 local function loadApps()
-	print("[GPhone] Loading apps")
-	local files = file.Find("gpapps/*.lua", "LUA")
-	for _,v in pairs(files) do
-		APP = {}
-		
-		local name = string.sub(v, 0, string.len(v)-4)
-		AddCSLuaFile("gpapps/"..v)
-		
-		local r = file.Read("gpapps/"..v, "LUA")
-		RunString(r, v)
-		
-		local res = GP.AddApp(name, APP)
-		if !res then
-			print("[GPhone] Could not add app '"..name.."', possibly missing Name or Icon")
-		end
-		
-		APP = nil
+	if SERVER then
+		print("[GPhone] Adding serverside apps")
+	else
+		print("[GPhone] Loading serverside apps")
 	end
 	
-	if CLIENT and GetConVar("gphone_csapp"):GetBool() then
-		print("[GPhone] Loading clientside apps")
+	local files = file.Find("gpapps/*.lua", "LUA")
+	for _,v in pairs(files) do
+		local name = string.sub(v, 0, string.len(v)-4)
 		
-		local files = file.Find("gphone/apps/*.txt", "DATA")
-		for _,v in pairs(files) do
+		if SERVER then
+			AddCSLuaFile("gpapps/"..v)
+		else
 			APP = {}
+			local r = file.Read("gpapps/"..v, "LUA")
+			RunString(r or "", v)
 			
-			local name = string.sub(v, 0, string.len(v)-4)
-			local r = file.Read("gphone/apps/"..v, "DATA")
-			RunString(r, v)
-			
-			local res = GP.AddApp(name, APP)
+			local res = GPhone.AddApp(name, APP)
 			if !res then
 				print("[GPhone] Could not add app '"..name.."', possibly missing Name or Icon")
 			end
@@ -63,9 +34,33 @@ local function loadApps()
 		end
 	end
 	
-	print("[GPhone] App loading finished")
+	if CLIENT then
+		if GetConVar("gphone_csapp"):GetBool() then
+			print("[GPhone] Loading clientside apps")
+			
+			local files = file.Find("gphone/apps/*.txt", "DATA")
+			for _,v in pairs(files) do
+				APP = {}
+				
+				local name = string.sub(v, 0, string.len(v)-4)
+				local r = file.Read("gphone/apps/"..v, "DATA")
+				RunString(r, v)
+				
+				local res = GPhone.AddApp(name, APP)
+				if !res then
+					print("[GPhone] Could not add app '"..name.."', possibly missing Name or Icon")
+				end
+				
+				APP = nil
+			end
+		end
+		
+		print("[GPhone] App loading finished")
+	else
+		print("[GPhone] Serverside apps initialized")
+	end
 end
---loadApps() Too Fast Cause convars are not created yet 'lua/gphone/sh_gphone.lua:46: attempt to index a nil value'
+loadApps()
 -- hook.Add("PostGamemodeLoaded", "GPhoneInitApps", loadApps)
 
 local selfietranslate = {}
@@ -83,9 +78,6 @@ hook.Add("TranslateActivity", "GPhoneSelfieActivity", function(ply, act)
 	end
 end)
 
-CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
-CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
-loadApps() -- now should not error 
 if SERVER then
 	hook.Add("PlayerAuthed", function(ply)
 		--[[net.Start("GPhone_LoadApps")
@@ -160,6 +152,11 @@ else
 		panel:AddControl("CheckBox", {
 			Label = "Enable singleplayer synchronization",
 			Command = "gphone_sync"
+		})
+		
+		panel:AddControl("Button", {
+			Label = "Reload apps",
+			Command = "gphone_reloadapps"
 		})
 	end
 
@@ -238,6 +235,16 @@ else
 		})
 		
 		panel:MatSelect( "gphone_cursormat", list.Get( "CursorMaterials" ), true, 0.25, 0.25 )
+		
+		panel:AddControl("Button", {
+			Label = "Redownload images",
+			Command = "gphone_redownloadimages"
+		})
+		
+		panel:AddControl("Button", {
+			Label = "Clear image cache",
+			Command = "gphone_clearcache"
+		})
 	end
 
 	hook.Add("PopulateToolMenu", "GPhoneCvarsPanel", function()

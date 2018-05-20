@@ -1,6 +1,6 @@
 APP.Name = "Maps"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/maps.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/maps.png"
+function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 255 ) )
 	end
@@ -10,13 +10,13 @@ function APP.Run( frame, w, h )
 	local mat,offset,dist = LoadMapRT()
 	
 	local map = GPnl.AddPanel( frame )
-	map:SetPos( 0, 64 )
+	map:SetPos( 0, 64 * ratio )
 	map:SetSize( w, w )
 	function map:OnClick()
-		local mx,my = GPhone.CursorPos.x,GPhone.CursorPos.y
+		local x,y = GPhone.GetCursorPos()
 		local point = GPnl.AddPanel( self )
-		point:SetPos( mx-16, my-32-64-GPhone.Desk.Offset )
-		point:SetSize( 32, 32 )
+		point:SetPos( x - 16 * ratio, y - GPhone.Desk.Offset - (32+64) * ratio )
+		point:SetSize( 32 * ratio, 32 * ratio )
 		function point:Paint( x, y, w, h )
 			surface.SetDrawColor( 255, 0, 0 )
 			surface.SetMaterial( pointmat )
@@ -57,7 +57,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( frame )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -66,8 +66,8 @@ function APP.Run( frame, w, h )
 	end
 	
 	local refresh = GPnl.AddPanel( header )
-	refresh:SetPos( w - 64, 0 )
-	refresh:SetSize( 64, 64 )
+	refresh:SetPos( w - 64 * ratio, 0 )
+	refresh:SetSize( 64 * ratio, 64 * ratio )
 	function refresh:Paint( x, y, w, h )
 		surface.SetDrawColor(50, 50, 50)
 		surface.SetTexture( surface.GetTextureID( "gui/html/refresh" ) )
@@ -114,8 +114,8 @@ function LoadMapRT( reset )
 		EnhancedCamera.ShouldDraw = function() return false end
 	end
 	
-	if !reset and file.Exists("maps/"..game.GetMap()..".jpg", "DATA") and file.Exists("maps/"..game.GetMap()..".txt", "DATA") then
-		local r = file.Read("maps/"..game.GetMap()..".txt", "DATA")
+	if !reset and file.Exists("gphone/maps/"..game.GetMap()..".jpg", "DATA") and file.Exists("gphone/maps/"..game.GetMap()..".txt", "DATA") then
+		local r = file.Read("gphone/maps/"..game.GetMap()..".txt", "DATA")
 		local data = util.JSONToTable(r)
 		
 		offset = data.offset
@@ -237,10 +237,10 @@ function LoadMapRT( reset )
 		
 		rendering_gphone_map = false
 		
-		file.CreateDir("maps")
+		file.CreateDir("gphone/maps")
 		
 		local data = render.Capture( { format = "jpeg", quality = 100, x = 0, y = 0, h = size, w = size } )
-		local mapimg = file.Open( "maps/"..game.GetMap()..".jpg", "wb", "DATA" )
+		local mapimg = file.Open( "gphone/maps/"..game.GetMap()..".jpg", "wb", "DATA" )
 		mapimg:Write( data )
 		mapimg:Close()
 		
@@ -248,7 +248,7 @@ function LoadMapRT( reset )
 			offset = offset,
 			dist = dist
 		}
-		local mapfile = file.Open( "maps/"..game.GetMap()..".txt", "wb", "DATA" )
+		local mapfile = file.Open( "gphone/maps/"..game.GetMap()..".txt", "wb", "DATA" )
 		mapfile:Write( util.TableToJSON(data) )
 		mapfile:Close()
 		
@@ -260,7 +260,7 @@ function LoadMapRT( reset )
 		EnhancedCamera.ShouldDraw = oldDraw
 	end
 	
-	local bMapMat = Material("data/maps/"..game.GetMap()..".jpg")
+	local bMapMat = Material("data/gphone/maps/"..game.GetMap()..".jpg")
 	
 	return bMapMat,offset,dist
 end

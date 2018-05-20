@@ -1,18 +1,22 @@
 APP.Name = "Camera"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/camera.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camera.png"
+function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
 	frame.front = LocalPlayer():GetNWBool("GPSelfie")
+	frame.fov = 90
 	
+	function frame:OnScroll( num )
+		self.fov = math.Clamp(self.fov - num*5, 5, 100)
+	end
 	function frame:Paint( x, y, w, h )
-		local mat = GPhone.RenderCamera( 90, self.front )
+		local mat = GPhone.RenderCamera( frame.fov, self.front )
 		
 		surface.SetDrawColor(255, 255, 255, 255)
 		surface.SetMaterial( mat )
 		surface.DrawTexturedRect(0, 0, w, h)
 		
-		draw.RoundedBox(0, 0, h-100, w, 100, Color(0, 0, 0, 150))
+		draw.RoundedBox(0, 0, h - 100 * ratio, w, 100 * ratio, Color(0, 0, 0, 150))
 	end
 	
 	local switch = GPnl.AddPanel( frame )
@@ -32,8 +36,8 @@ function APP.Run( frame, w, h )
 	end
 	
 	local photo = GPnl.AddPanel( frame )
-	photo:SetSize( 80, 80 )
-	photo:SetPos( w-90, h-90 )
+	photo:SetSize( 80 * ratio, 80 * ratio )
+	photo:SetPos( w-90 * ratio, h-90 * ratio )
 	function photo:Paint( x, y, w, h )
 		if self.last then
 			local s = w/GPhone.Ratio
@@ -44,8 +48,8 @@ function APP.Run( frame, w, h )
 	end
 	
 	local screenshot = GPnl.AddPanel( frame )
-	screenshot:SetSize( 100, 100 )
-	screenshot:SetPos( w/2-100/2, h-100 )
+	screenshot:SetSize( 100 * ratio, 100 * ratio )
+	screenshot:SetPos( w/2 - (100 * ratio)/2, h - 100 * ratio )
 	function screenshot:Paint( x, y, w, h )
 		surface.SetDrawColor(255, 255, 255)
 		surface.SetTexture( surface.GetTextureID( "sgm/playercircle" ) )
@@ -54,7 +58,9 @@ function APP.Run( frame, w, h )
 	function screenshot:OnClick()
 		surface.PlaySound("npc/scanner/scanner_photo1.wav")
 		
-		GPhone.RenderCamera(90, frame.front, function(pos, ang)
+		file.CreateDir("gphone/photos")
+		
+		GPhone.RenderCamera(frame.fov, frame.front, function(pos, ang)
 			local data = render.Capture( {
 				format = "jpeg",
 				quality = 100,
@@ -65,9 +71,17 @@ function APP.Run( frame, w, h )
 			} )
 			
 			local name = game.GetMap().."_"..os.time()..".jpg"
-			file.Write(name, data)
-			photo.last = Material("data/"..name)
+			file.Write("gphone/photos/"..name, data)
+			photo.last = Material("data/gphone/photos/"..name)
 		end)
+	end
+end
+
+function APP.Focus( frame )
+	if frame.front then
+		net.Start("GPhone_Selfie")
+			net.WriteBool( true )
+		net.SendToServer()
 	end
 end
 

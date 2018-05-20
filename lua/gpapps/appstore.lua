@@ -1,24 +1,24 @@
 APP.Name = "AppStore"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/appstore.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/appstore.png"
+function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
 	local scroll = GPnl.AddPanel( frame, "scroll" )
-	scroll:SetPos( 0, 64 )
-	scroll:SetSize( w, h-128 )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
 	
 	local function loadapps()
 		scroll:Clear()
-		local count = 0
-		for name,app in pairs(GP.GetApps()) do
-			if GP.DefaultApps and table.HasValue(GP.DefaultApps, name) then continue end
+		local count = -1
+		for name,app in pairs(GPhone.GetApps()) do
+			if GPhone.DefaultApps and table.HasValue(GPhone.DefaultApps, name) then continue end
 			count = count + 1
 			
 			local but = GPnl.AddPanel( scroll )
-			but:SetSize( w, 64 )
-			but:SetPos( 0, (count-1)*64 + 6 )
+			but:SetSize( w, 64 * ratio )
+			but:SetPos( 0, ( count*64 + 6 ) * ratio )
 			function but:Paint( x, y, w, h )
 				draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 				draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -30,16 +30,16 @@ function APP.Run( frame, w, h )
 				draw.SimpleText(app.Name, "GPMedium", h+4, 4, Color(70,70,70), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 				draw.SimpleText(app.Author or "The Fern", "GPSmall", h+4, h-6, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM)
 				
-				local rate = app.Rating and math.Clamp(app.Rating, 0, 1) or 1
+				--[[local rate = app.Rating and math.Clamp(app.Rating, 0, 1) or 1
 				surface.SetDrawColor( 255*(1-rate), 255*rate, 0 )
 				surface.SetTexture( surface.GetTextureID("gphone/dot_empty") )
 				surface.DrawTexturedRect( w-80, h/2, 80, h/2-2 )
 				surface.SetTexture( surface.GetTextureID("gphone/dot_full") )
-				surface.DrawTexturedRectUV( w-80, h/2, 80*rate, h/2-2, 0, 0, rate, 1 )
+				surface.DrawTexturedRectUV( w-80, h/2, 80*rate, h/2-2, 0, 0, rate, 1 )]]
 				
 				if !table.HasValue(GPhone.Data.apps, name) then
 					local text = (app.Price and app.Price.."$") or "Install"
-					draw.SimpleText(text, "GPMedium", w - 4, 0, Color(70,70,70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+					draw.SimpleText(text, "GPMedium", w - 12, h/2, Color(70,70,70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 				end
 			end
 			function but:OnClick()
@@ -58,7 +58,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( frame )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -78,8 +78,8 @@ function APP.Run( frame, w, h )
 	
 	if GetConVar("gphone_csapp"):GetBool() then
 		local add = GPnl.AddPanel( header )
-		add:SetPos( w - 64, 0 )
-		add:SetSize( 64, 64 )
+		add:SetPos( w - 64 * ratio, 0 )
+		add:SetSize( 64 * ratio, 64 * ratio )
 		function add:OnClick()
 			local function onEnter( value )
 				GPhone.DownloadApp( value )

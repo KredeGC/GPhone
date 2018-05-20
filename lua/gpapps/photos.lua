@@ -1,6 +1,6 @@
 APP.Name = "Photos"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/photos.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/photos.png"
+function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
@@ -26,8 +26,8 @@ function APP.Run( frame, w, h )
 		end
 		
 		footer = GPnl.AddPanel( frame )
-		footer:SetPos( 0, h-64 )
-		footer:SetSize( w, 64 )
+		footer:SetPos( 0, h - 64 * ratio )
+		footer:SetSize( w, 64 * ratio )
 		function footer:Paint( x, y, w, h )
 			draw.RoundedBox( 0, 0, 0, w, 2, Color( 80, 80, 80, 255 ) )
 			draw.RoundedBox( 0, 0, 2, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -35,18 +35,20 @@ function APP.Run( frame, w, h )
 		
 		header = GPnl.AddPanel( frame )
 		header:SetPos( 0, 0 )
-		header:SetSize( w, 64 )
+		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
 			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 			
-			draw.SimpleText(pic, "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			local name = string.Explode("/", pic)
+			
+			draw.SimpleText(name[#name], "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 		
 		if file.Exists(pic, "DATA") then
 			local trash = GPnl.AddPanel( footer )
-			trash:SetPos( footer:GetWidth()-64, 0 )
-			trash:SetSize( 64, 64 )
+			trash:SetPos( footer:GetWidth() - 64 * ratio, 0 )
+			trash:SetSize( 64 * ratio, 64 * ratio )
 			function trash:Paint( x, y, w, h )
 				surface.SetDrawColor(255, 0, 0)
 				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
@@ -61,8 +63,8 @@ function APP.Run( frame, w, h )
 		end
 		
 		local wallpaper = GPnl.AddPanel( footer )
-		wallpaper:SetPos( 64, 0 )
-		wallpaper:SetSize( footer:GetWidth()-128, 64 )
+		wallpaper:SetPos( 64 * ratio, 0 )
+		wallpaper:SetSize( footer:GetWidth() - 128 * ratio, 64 * ratio )
 		function wallpaper:Paint( x, y, w, h )
 			draw.SimpleText("Set As Background", "GPMedium", w/2, h/2, Color(75, 170, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
@@ -75,7 +77,7 @@ function APP.Run( frame, w, h )
 		
 		local back = GPnl.AddPanel( header )
 		back:SetPos( 0, 0 )
-		back:SetSize( 64, 64 )
+		back:SetSize( 64 * ratio, 64 * ratio )
 		function back:OnClick()
 			frame.Main()
 		end
@@ -88,14 +90,14 @@ function APP.Run( frame, w, h )
 		frame:Clear()
 		
 		local scroll = GPnl.AddPanel( frame, "scroll" )
-		scroll:SetPos( 0, 64 )
-		scroll:SetSize( w, h-128 )
+		scroll:SetPos( 0, 64 * ratio )
+		scroll:SetSize( w, h - 128 * ratio )
 		
 		local x = 0
 		local y = 0
 		local width = w/4
 		local height = width / GPhone.Ratio
-		local pics = file.Find("*.jpg", "DATA")
+		local pics,dirs = file.Find("gphone/photos/*.jpg", "DATA")
 		
 		for i,jpg in pairs(pics) do
 			timer.Simple((i-1)*0.05, function()
@@ -109,8 +111,8 @@ function APP.Run( frame, w, h )
 				local but = GPnl.AddPanel( scroll )
 				but:SetSize( width, height )
 				but:SetPos( x*width - width, y*height )
-				but.pic = jpg
-				but.mat = Material("data/"..jpg)
+				but.pic = "gphone/photos/"..jpg
+				but.mat = Material("data/gphone/photos/"..jpg)
 				function but:Paint( x, y, w, h )
 					if frame and frame.m_choose and table.HasValue(frame.m_chosen, but) then
 						draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 200, 255 ) )
@@ -120,8 +122,12 @@ function APP.Run( frame, w, h )
 					surface.SetMaterial( but.mat )
 					surface.DrawTexturedRect( 2, 2, w-4, h-4 )
 				end
-				function but:OnClick()
-					if frame.m_choose then
+				function but:OnClick( hold )
+					if hold and !frame.m_choose then
+						frame.trash:SetVisible( true )
+						frame.m_choose = true
+						frame.m_chosen = { self }
+					elseif frame.m_choose then
 						if table.HasValue(frame.m_chosen, but) then
 							table.RemoveByValue(frame.m_chosen, but)
 						else
@@ -135,18 +141,18 @@ function APP.Run( frame, w, h )
 		end
 		
 		local footer = GPnl.AddPanel( frame )
-		footer:SetPos( 0, h-64 )
-		footer:SetSize( w, 64 )
+		footer:SetPos( 0, h - 64 * ratio )
+		footer:SetSize( w, 64 * ratio )
 		function footer:Paint( x, y, w, h )
 			draw.RoundedBox( 0, 0, 0, w, 2, Color( 80, 80, 80, 255 ) )
 			draw.RoundedBox( 0, 0, 2, w, h-2, Color( 255, 255, 255, 255 ) )
 		end
 		
-		local trash = GPnl.AddPanel( footer )
-		trash:SetPos( footer:GetWidth()-64, 0 )
-		trash:SetSize( 64, 64 )
-		trash:SetVisible(false)
-		function trash:Paint( x, y, w, h )
+		frame.trash = GPnl.AddPanel( footer )
+		frame.trash:SetPos( footer:GetWidth() - 64 * ratio, 0 )
+		frame.trash:SetSize( 64 * ratio, 64 * ratio )
+		frame.trash:SetVisible(false)
+		function frame.trash:Paint( x, y, w, h )
 			if frame and frame.m_chosen and #frame.m_chosen > 0 then
 				surface.SetDrawColor(255, 0, 0)
 				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
@@ -157,7 +163,7 @@ function APP.Run( frame, w, h )
 				surface.DrawTexturedRect( 0, 0, w, h )
 			end
 		end
-		function trash:OnClick()
+		function frame.trash:OnClick()
 			if frame and frame.m_chosen and #frame.m_chosen > 0 then
 				for k,but in pairs(frame.m_chosen) do
 					if file.Exists(but.pic, "DATA") then
@@ -167,14 +173,14 @@ function APP.Run( frame, w, h )
 				end
 				frame.m_choose = false
 				frame.m_chosen = {}
-				trash:SetVisible(false)
+				self:SetVisible(false)
 				frame.Main()
 			end
 		end
 		
 		local header = GPnl.AddPanel( frame )
 		header:SetPos( 0, 0 )
-		header:SetSize( w, 64 )
+		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
 			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -183,8 +189,8 @@ function APP.Run( frame, w, h )
 		end
 		
 		local choose = GPnl.AddPanel( header )
-		choose:SetSize( 104, 64 )
-		choose:SetPos( w-104, 0 )
+		choose:SetSize( 104 * ratio, 64 * ratio )
+		choose:SetPos( w - 104 * ratio, 0 )
 		function choose:Paint( x, y, w, h )
 			if !frame then return end
 			if !frame.m_choose then
@@ -198,9 +204,9 @@ function APP.Run( frame, w, h )
 			frame.m_choose = b
 			if !b then
 				frame.m_chosen = {}
-				trash:SetVisible(false)
+				frame.trash:SetVisible(false)
 			else
-				trash:SetVisible(true)
+				frame.trash:SetVisible(true)
 			end
 		end
 	end

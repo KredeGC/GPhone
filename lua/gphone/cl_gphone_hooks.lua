@@ -120,8 +120,8 @@ hook.Add("InputMouseApply", "GPhoneMousePos", function( cmd, x, y, angle )
 		local ychange = y * sens * 0.1
 		local xchange = x * sens * 0.1
 		
-		local x = math.Clamp(GPhone.CursorPos.x + xchange, -10*2, GPhone.Width + 12*2)
-		local y = math.Clamp(GPhone.CursorPos.y + ychange, -95*2, GPhone.Height + 98*2)
+		local x = math.Clamp(GPhone.CursorPos.x + xchange, -20, 584)
+		local y = math.Clamp(GPhone.CursorPos.y + ychange, -190, 1026)
 		
 		GPhone.CursorPos = {x = x, y = y}
 		

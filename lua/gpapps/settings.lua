@@ -1,20 +1,20 @@
 APP.Name = "Settings"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/settings.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/settings.png"
+function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
 	
 	local main = frame:AddTab( "home", "panel" )
-	local space = 12
+	local space = 12 * ratio
 	
 	local scroll = GPnl.AddPanel( main, "scroll" )
-	scroll:SetPos( 0, 64 )
-	scroll:SetSize( w, h-64 )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
 		
 	local appeartab = GPnl.AddPanel( scroll )
-	appeartab:SetSize( w, 64 )
+	appeartab:SetSize( w, 64 * ratio )
 	appeartab:SetPos( 0, space )
 	function appeartab:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -26,10 +26,10 @@ function APP.Run( frame, w, h )
 		frame:OpenTab( "appearance", 0.25, "in-right", "out-left" )
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local debugtab = GPnl.AddPanel( scroll )
-	debugtab:SetSize( w, 64 )
+	debugtab:SetSize( w, 64 * ratio )
 	debugtab:SetPos( 0, space )
 	function debugtab:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -41,10 +41,10 @@ function APP.Run( frame, w, h )
 		frame:OpenTab( "debug", 0.25, "in-right", "out-left" )
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local abouttab = GPnl.AddPanel( scroll )
-	abouttab:SetSize( w, 64 )
+	abouttab:SetSize( w, 64 * ratio )
 	abouttab:SetPos( 0, space )
 	function abouttab:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -58,7 +58,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( main )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -71,14 +71,14 @@ function APP.Run( frame, w, h )
 	
 	
 	local appearance = frame:AddTab( "appearance", "panel" )
-	local space = 12
+	local space = 12 * ratio
 	
 	local scroll = GPnl.AddPanel( appearance, "scroll" )
-	scroll:SetPos( 0, 64 )
-	scroll:SetSize( w, h-64 )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
 	
 	local hold = GPnl.AddPanel( scroll, "textentry" )
-	hold:SetSize( w, 64 )
+	hold:SetSize( w, 64 * ratio )
 	hold:SetPos( 0, space )
 	hold:SetText( math.Round(GetConVar("gphone_holdtime"):GetFloat(), 2) )
 	function hold:Paint( x, y, w, h )
@@ -95,10 +95,10 @@ function APP.Run( frame, w, h )
 		end
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local ampm = GPnl.AddPanel( scroll, "panel" )
-	ampm:SetSize( w, 64 )
+	ampm:SetSize( w, 64 * ratio )
 	ampm:SetPos( 0, space )
 	function ampm:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -107,8 +107,8 @@ function APP.Run( frame, w, h )
 		draw.SimpleText("Use AM/PM", "GPMedium", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	
-	local pad = 8
-	local size = 64-pad*2
+	local pad = 8 * ratio
+	local size = 64 * ratio - pad*2
 	local toggle = GPnl.AddPanel( ampm, "toggle" )
 	toggle:SetSize( size*2, size )
 	toggle:SetPos( w - size*2 - pad, pad )
@@ -119,10 +119,10 @@ function APP.Run( frame, w, h )
 		RunConsoleCommand("gphone_ampm", bool and 1 or 0)
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local brightness = GPnl.AddPanel( scroll, "textentry" )
-	brightness:SetSize( w, 64 )
+	brightness:SetSize( w, 64 * ratio )
 	brightness:SetPos( 0, space )
 	brightness:SetText( math.Round(GetConVar("gphone_brightness"):GetFloat()*100) )
 	function brightness:Paint( x, y, w, h )
@@ -141,10 +141,10 @@ function APP.Run( frame, w, h )
 		end
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local wallpaper = GPnl.AddPanel( scroll, "textentry" )
-	wallpaper:SetSize( w, 64 )
+	wallpaper:SetSize( w, 64 * ratio )
 	wallpaper:SetPos( 0, space )
 	function wallpaper:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -175,7 +175,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( appearance )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -185,7 +185,7 @@ function APP.Run( frame, w, h )
 	
 	local back = GPnl.AddPanel( header )
 	back:SetPos( 0, 0 )
-	back:SetSize( 64, 64 )
+	back:SetSize( 64 * ratio, 64 * ratio )
 	function back:OnClick()
 		frame:OpenTab( "home", 0.25, "in-left", "out-right" )
 	end
@@ -196,14 +196,14 @@ function APP.Run( frame, w, h )
 	
 	
 	local debugger = frame:AddTab( "debug", "panel" )
-	local space = 12
+	local space = 12 * ratio
 	
 	local scroll = GPnl.AddPanel( debugger, "scroll" )
-	scroll:SetPos( 0, 64 )
-	scroll:SetSize( w, h-64 )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h-64 * ratio )
 		
 	local wipe = GPnl.AddPanel( scroll )
-	wipe:SetSize( w, 64 )
+	wipe:SetSize( w, 64 * ratio )
 	wipe:SetPos( 0, space )
 	function wipe:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -215,10 +215,10 @@ function APP.Run( frame, w, h )
 		GPhone.WipeLog()
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local plog = GPnl.AddPanel( scroll )
-	plog:SetSize( w, 64 )
+	plog:SetSize( w, 64 * ratio )
 	plog:SetPos( 0, space )
 	function plog:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -230,10 +230,10 @@ function APP.Run( frame, w, h )
 		GPhone.PrintLog()
 	end
 	
-	space = space + 64
+	space = space + 64 * ratio
 	
 	local imag = GPnl.AddPanel( scroll )
-	imag:SetSize( w, 64 )
+	imag:SetSize( w, 64 * ratio )
 	imag:SetPos( 0, space )
 	function imag:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
@@ -247,7 +247,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( debugger )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -257,7 +257,7 @@ function APP.Run( frame, w, h )
 	
 	local back = GPnl.AddPanel( header )
 	back:SetPos( 0, 0 )
-	back:SetSize( 64, 64 )
+	back:SetSize( 64 * ratio, 64 * ratio )
 	function back:OnClick()
 		frame:OpenTab( "home", 0.25, "in-left", "out-right" )
 	end
@@ -270,8 +270,8 @@ function APP.Run( frame, w, h )
 	local about = frame:AddTab( "about", "panel" )
 	
 	local content = GPnl.AddPanel( about, "panel" )
-	content:SetPos( 0, 64 )
-	content:SetSize( w, h - 64 )
+	content:SetPos( 0, 64 * ratio )
+	content:SetSize( w, h - 64 * ratio )
 	function content:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220 ) )
 		draw.RoundedBox( 0, 0, 12, w, w/2-2, Color( 255, 255, 255 ) )
@@ -306,7 +306,7 @@ function APP.Run( frame, w, h )
 	
 	local header = GPnl.AddPanel( about )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 )
+	header:SetSize( w, 64 * ratio )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
@@ -316,7 +316,7 @@ function APP.Run( frame, w, h )
 	
 	local back = GPnl.AddPanel( header )
 	back:SetPos( 0, 0 )
-	back:SetSize( 64, 64 )
+	back:SetSize( 64 * ratio, 64 * ratio )
 	function back:OnClick()
 		frame:OpenTab( "home", 0.25, "in-left", "out-right" )
 	end
@@ -326,7 +326,7 @@ function APP.Run( frame, w, h )
 	
 	local update = GPnl.AddPanel( content )
 	update:SetPos( 0, w/2 + 12 )
-	update:SetSize( w, 64 )
+	update:SetSize( w, 64 * ratio )
 	function update:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )

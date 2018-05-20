@@ -308,7 +308,7 @@ local paneltypes = {
 		end
 		
 		function frame:OnClick()
-			local mx,my = GPhone.CursorPos.x,GPhone.CursorPos.y
+			local mx,my = GPhone.GetCursorPos()
 			local x,y = GPhone.GetHTMLPos( self, self:GetHTML(), mx, my )
 			
 			GPhone.PerformHTMLClick( self:GetHTML(), x, y )

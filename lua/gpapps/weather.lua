@@ -1,14 +1,14 @@
 APP.Name = "StormFox"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/weather.png"
-function APP.Run( frame, w, h )
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/weather.png"
+function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
 	if !StormFox then
 		local install = GPnl.AddPanel( frame )
-		install:SetPos( 32, h/2 - 64 )
-		install:SetSize( w-64, 128 )
+		install:SetPos( 32 * ratio, h/2 - 64 * ratio )
+		install:SetSize( w - 64 * ratio, 128 * ratio )
 		function install:Paint( x, y, w, h )
 			draw.RoundedBox( 8, 0, 0, w, h, Color( 150, 150, 150, 255 ) )
 			draw.SimpleText("Get StormFox", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -18,19 +18,19 @@ function APP.Run( frame, w, h )
 		end
 	else
 		local scroll = GPnl.AddPanel( frame, "scroll" )
-		scroll:SetPos( 0, 64 )
-		scroll:SetSize( w, h-64 )
+		scroll:SetPos( 0, 64 * ratio )
+		scroll:SetSize( w, h - 64 * ratio )
 		scroll:SetScrollSpeed( 48 )
 		
 		if StormFox then
 			local weather = StormFox.GetNetworkData("WeekWeather",{})
-			local size = 128
+			local size = 128 * ratio
 			
 			for k = 1, 7 do
 				local data = weather[k]
 				if !data then continue end
 				local pnl = GPnl.AddPanel( scroll )
-				pnl:SetPos( 0, 6 + (k-1)*size )
+				pnl:SetPos( 0, 6 * ratio + (k-1)*size )
 				pnl:SetSize( w, size )
 				pnl.name = StormFox.GetWeatherType(data.name):GetName( temp, data.wind, data.thunder  )
 				pnl.mat = StormFox.GetWeatherType(data.name):GetIcon( temp, data.wind, data.thunder )
@@ -51,7 +51,7 @@ function APP.Run( frame, w, h )
 		
 		local header = GPnl.AddPanel( frame )
 		header:SetPos( 0, 0 )
-		header:SetSize( w, 64 )
+		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
 			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )

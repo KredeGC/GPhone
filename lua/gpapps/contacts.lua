@@ -1,5 +1,5 @@
-APP.Name = "Contacts"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/contacts.png"
+-- APP.Name = "Contacts"
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/contacts.png"
 function APP.Run( frame, w, h )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
@@ -21,7 +21,7 @@ function APP.Run( frame, w, h )
 			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 			
 			surface.SetDrawColor(80, 80, 80)
-			surface.SetMaterial( GPhone.GetImage( "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/useranony.png" ) )
+			surface.SetMaterial( GPhone.GetImage( "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/useranony.png" ) )
 			surface.DrawTexturedRect( 2, 2, h-4, h-4 )
 			
 			draw.SimpleText(name, "GPMedium", 34, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)

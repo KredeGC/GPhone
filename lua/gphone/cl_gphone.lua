@@ -7,20 +7,11 @@ if !GPhone then
 	GPhone.CachedImages = {}
 	GPhone.MusicStream = {}
 	GPhone.AwaitingCalls = {}
-	
 	GPhone.HTML = {}
 	GPhone.Log = {}
-	GPhone.Desk = {
-		Spacing = 24,
-		Offset = 40
-	}
-	GPhone.AppScreen = {
-		Enabled = false,
-		Scroll = 0,
-		Offset = 64,
-		Spacing = 24,
-		Scale = 0.6
-	}
+	GPhone.Apps = {}
+	GPhone.DefaultApps = {"appstore", "settings", "camera", "photos", "contacts"}
+	
 	GPhone.CurrentApp = nil
 	GPhone.CurrentFrame = nil
 	GPhone.MovingApp = nil
@@ -31,10 +22,23 @@ if !GPhone then
 	
 	GPhone.CursorEnabled = false
 	GPhone.Page = 1
-	GPhone.Width = 560
-	GPhone.Height = 830
-	GPhone.Ratio = GPhone.Width / GPhone.Height
-	GPhone.CursorPos = {x = GPhone.Width/2, y = GPhone.Height/2}
+	GPhone.Ratio = 560 / 830
+	GPhone.Height = ScrH() / 1.032 -- Scaling with rendertargets is weird
+	GPhone.Width = GPhone.Height * GPhone.Ratio
+	GPhone.Resolution = GPhone.Height / 830
+	GPhone.CursorPos = {x = 280, y = 415}
+	
+	GPhone.Desk = {
+		Spacing = 24 * GPhone.Resolution,
+		Offset = 40 * GPhone.Resolution
+	}
+	GPhone.AppScreen = {
+		Enabled = false,
+		Scroll = 0,
+		Offset = 64 * GPhone.Resolution,
+		Spacing = 24 * GPhone.Resolution,
+		Scale = 0.6
+	}
 end
 
 local function parentPos( p )
@@ -64,6 +68,7 @@ function GPhone.GetAppPos() -- Became tired of doing all this manually... This i
 	local rows = cv and cv:GetInt() or 4
 	local offset = GPhone.Desk.Offset
 	local size = GPhone.GetAppSize(spacing, rows)
+	local ratio = GPhone.Resolution
 	
 	local windows = {{}}
 	local page = 1
@@ -71,7 +76,7 @@ function GPhone.GetAppPos() -- Became tired of doing all this manually... This i
 	local posy = 0
 	
 	for k,appid in pairs(GPhone.Data.apps) do
-		local app = GP.GetApp(appid)
+		local app = GPhone.GetApp(appid)
 		if !app then continue end
 		
 		posx = posx + 1
@@ -81,9 +86,9 @@ function GPhone.GetAppPos() -- Became tired of doing all this manually... This i
 			posy = posy + 1
 		end
 		
-		local x,y = (posx-1)*(size+spacing)+spacing, posy*(size+36)+offset+spacing
+		local x,y = (posx-1)*(size+spacing)+spacing, posy*(size+36*ratio)+offset+spacing
 		
-		if y + size >= h then
+		if y + size + 36*ratio >= h then
 			page = page + 1
 			windows[page] = {}
 			posx = 1
@@ -104,7 +109,7 @@ function GPhone.GetPage( id )
 end
 
 function GPhone.AppThumbnail( appid )
-	local app = GP.GetApp( GPhone.CurrentApp )
+	local app = GPhone.GetApp( GPhone.CurrentApp )
 	if !app then return end
 	local frame = GPhone.Panels[appid]
 	if !frame then return false end
@@ -124,7 +129,7 @@ function GPhone.AppThumbnail( appid )
 						
 						render.SetViewPort(max, may, oldw, oldh)
 						render.SetScissorRect(max, may, mix, miy, true)
-						GPhone.DebugFunction( child.Paint, child, child.x, child.y, child.w, child.h )
+						GPhone.DebugFunction( child.Paint, child, px + child.x, py + child.y, child.w, child.h )
 						render.SetScissorRect(0, 0, 0, 0, false)
 					end
 					
@@ -155,19 +160,35 @@ function GPhone.AppThumbnail( appid )
 end
 
 
-surface.CreateFont("GPTopBar", { font = "Open Sans Light", size = 34, additive = false, shadow = false})
+function GPhone.AddApp( name, tbl )
+	if type(tbl) != "table" or !tbl.Name or !tbl.Icon then return false end
+	GPhone.GetApps()[name] = tbl
+	return true
+end
 
-surface.CreateFont("GPAppName", { font = "Open Sans Light", size = 30, additive = false, shadow = false})
+function GPhone.GetApp( name )
+	local app = GPhone.GetApps()[name]
+	return app or false
+end
 
-surface.CreateFont("GPSmall", { font = "Open Sans", size = 28, additive = false, shadow = false})
+function GPhone.GetApps()
+	return GPhone.Apps
+end
 
-surface.CreateFont("GPMedium", { font = "Open Sans", size = 36, additive = false, shadow = false})
 
-surface.CreateFont("GPTitle", { font = "Open Sans", size = 44, additive = false, shadow = false})
+surface.CreateFont("GPTopBar", { font = "Open Sans Light", size = 34 * GPhone.Resolution, additive = false, shadow = false})
 
-GPhone.CamRT = GetRenderTarget("GPCameraRT", GPhone.Width, GPhone.Height, false)
+surface.CreateFont("GPAppName", { font = "Open Sans Light", size = 30 * GPhone.Resolution, additive = false, shadow = false})
+
+surface.CreateFont("GPSmall", { font = "Open Sans", size = 28 * GPhone.Resolution, additive = false, shadow = false})
+
+surface.CreateFont("GPMedium", { font = "Open Sans", size = 36 * GPhone.Resolution, additive = false, shadow = false})
+
+surface.CreateFont("GPTitle", { font = "Open Sans", size = 44 * GPhone.Resolution, additive = false, shadow = false})
+
+GPhone.CamRT = GetRenderTarget("GPCameraRT_"..GPhone.Height, GPhone.Width, GPhone.Height, false)
 GPhone.CamMV = CreateMaterial(
-	"GPCameraMV",
+	"GPCameraMT_"..GPhone.Height,
 	"GMODScreenspace",
 	{
 		[ '$basetexture' ] = GPhone.CamRT,
@@ -214,7 +235,7 @@ net.Receive("GPhone_Load_Client", function(len)
 			GPhone.Data = tbl
 		else
 			local tbl = {
-				apps = GP.DefaultApps or {"appstore", "settings"},
+				apps = GPhone.DefaultApps or {"appstore", "settings"},
 				background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/background.jpg"
 			}
 			file.Write("gphone/users/client.txt", util.TableToJSON(tbl))
@@ -235,6 +256,7 @@ end)
 net.Receive("GPhone_VoiceCall_Stop", function(len) -- Someone denied your voice request
 	GPhone.VoiceChatter = false
 end)
+
 
 function GPhone.DebugFunction( func, ... )
 	local function catch(err)
@@ -294,7 +316,8 @@ end
 
 function GPhone.GetCursorPos()
 	local p = GPhone.CursorPos
-	return p.x,p.y
+	local x,y = p.x / 560 * GPhone.Width,p.y / 830 * GPhone.Height
+	return x,y
 end
 
 function GPhone.GetPanel( name )
@@ -306,7 +329,7 @@ end
 function GPhone.RunApp( name )
 	if GPhone.Panels[name] then return false end
 	if !table.HasValue(GPhone.Data.apps, name) then return false end
-	local app = GP.GetApp( name )
+	local app = GPhone.GetApp( name )
 	if !app then return false end
 	local frame = GPnl.AddPanel( nil, "frame" )
 	if !frame then return false end
@@ -323,6 +346,8 @@ function GPhone.RunApp( name )
 	frame:SetPos( 0, offset )
 	frame:SetSize( w, h )
 	
+	frame.Remove = nil
+	
 	function frame:SetFullScreen( bool )
 		self.b_fullscreen = bool
 		local offset = bool and 0 or GPhone.Desk.Offset
@@ -338,12 +363,12 @@ function GPhone.RunApp( name )
 		if type(app.Run) == "string" then
 			local str = RunString( "appinit = "..app.Run, name, false )
 			if !str and appinit then
-				GPhone.DebugFunction( appinit, frame, w, h )
+				GPhone.DebugFunction( appinit, frame, w, h, GPhone.Resolution )
 			else
 				GPhone.Debug("[ERROR] in app '"..(app.Name or name).."': "..str, false, true)
 			end
 		else
-			GPhone.DebugFunction( app.Run, frame, w, h )
+			GPhone.DebugFunction( app.Run, frame, w, h, GPhone.Resolution )
 		end
 	end
 	return true
@@ -352,7 +377,7 @@ end
 function GPhone.StopApp( name )
 	local frame = GPhone.Panels[name]
 	if !frame then return false end
-	local app = GP.GetApp( name )
+	local app = GPhone.GetApp( name )
 	if app and app.Stop then
 		if type(app.Stop) == "string" then
 			local str = RunString( "appdel = "..app.Stop, name, false )
@@ -378,6 +403,10 @@ function GPhone.StopApp( name )
 	end
 	removeChildren( frame )
 	
+	net.Start("GPhone_Selfie")
+		net.WriteBool( false )
+	net.SendToServer()
+	
 	GPhone.Panels[name] = nil
 	if GPhone.CurrentApp == name then
 		GPhone.CurrentApp = nil
@@ -392,12 +421,48 @@ end
 
 function GPhone.FocusApp( name )
 	if !GPhone.Panels[name] then return false end
+	local frame = GPhone.Panels[name]
 	GPhone.CurrentApp = name
-	GPhone.CurrentFrame = GPhone.Panels[name]
+	GPhone.CurrentFrame = frame
+	local app = GPhone.GetApp( name )
+	if app and app.Focus then
+		if type(app.Focus) == "string" then
+			local str = RunString( "appfoc = "..app.Focus, name, false )
+			if !str and appfoc then
+				GPhone.DebugFunction( appfoc, frame )
+			else
+				GPhone.Debug("[ERROR] in app '"..(app.Name or name).."': "..str, false, true)
+			end
+		else
+			GPhone.DebugFunction( app.Focus, frame )
+		end
+	end
 	return true
 end
 
 function GPhone.FocusHome()
+	local name = GPhone.CurrentApp
+	local frame = GPhone.CurrentFrame
+	if name and frame then
+		local app = GPhone.GetApp( name )
+		if app and app.UnFocus then
+			if type(app.UnFocus) == "string" then
+				local str = RunString( "appunfoc = "..app.UnFocus, name, false )
+				if !str and appunfoc then
+					GPhone.DebugFunction( appunfoc, frame )
+				else
+					GPhone.Debug("[ERROR] in app '"..(app.Name or name).."': "..str, false, true)
+				end
+			else
+				GPhone.DebugFunction( app.UnFocus, frame )
+			end
+		end
+	end
+	
+	net.Start("GPhone_Selfie")
+		net.WriteBool( false )
+	net.SendToServer()
+	
 	GPhone.CurrentApp = nil
 	GPhone.CurrentFrame = nil
 	return true
@@ -415,7 +480,7 @@ function GPhone.UninstallApp( name )
 	local apps = GPhone.Data.apps
 	if file.Exists("gphone/apps/"..name..".txt", "DATA") then
 		file.Delete("gphone/apps/"..name..".txt")
-		GP.Apps[name] = nil
+		GPhone.Apps[name] = nil
 	end
 	if table.HasValue(apps, name) then
 		GPhone.StopApp( name )
@@ -443,7 +508,7 @@ function GPhone.DownloadApp( url )
 		
 		RunString(body, name, false)
 		
-		GP.AddApp(name, APP)
+		GPhone.AddApp(name, APP)
 		
 		APP = nil
 		
@@ -499,8 +564,10 @@ function GPhone.RenderCamera( fov, front, post )
 			end
 		end
 		
+		local oldLegs = nil
 		local oldDraw = nil
 		if front then
+			local oldlegs = ply.ShouldDisableLegs
 			ply.ShouldDisableLegs = true
 			if EnhancedCamera then
 				oldDraw = EnhancedCamera.ShouldDraw
@@ -526,14 +593,14 @@ function GPhone.RenderCamera( fov, front, post )
 		})
 		
 		if post then
-			GPhone.DebugFunction( post, pos, ang )
+			GPhone.DebugFunction( post, pos, ang, fov )
 		end
 		
 		GPSelfieRendering = false
 		-- GPCamRendering = false
 		
 		if front then
-			ply.ShouldDisableLegs = false
+			ply.ShouldDisableLegs = oldlegs
 			if EnhancedCamera and oldDraw then
 				EnhancedCamera.ShouldDraw = oldDraw
 			end
@@ -750,6 +817,9 @@ function GPhone.CreateHTMLPanel( w, h, url )
 end
 
 function GPhone.CloseHTMLPanel( html )
+	if table.HasValue(GPhone.HTML, html) then
+		table.RemoveByValue(GPhone.HTML, html)
+	end
 	if IsValid(html) then
 		html:Remove()
 	end
@@ -766,8 +836,7 @@ function GPhone.ReturnHTMLMaterial( html )
 		local mat = html:GetHTMLMaterial() -- Get the html material
 		
 		local scale_x,scale_y = html:GetWide() / mat:Width(),html:GetTall() / mat:Height() -- Setup the material-data with the proper scaling
-		local matdata =
-		{
+		local matdata = {
 			["$basetexture"] = mat:GetName(),
 			["$basetexturetransform"] = "center 0 0 scale "..scale_x.." "..scale_y.." rotate 0 translate 0 0",
 			["$vertexcolor"] = 1,
@@ -848,22 +917,26 @@ function GPhone.StartMusic( id )
 	GPhone.StopMusic()
 	GPhone.MusicURL = id or GPhone.MusicURL
 	
-	if string.StartWith(url, "http://") or string.StartWith(url, "https://") then
-		sound.PlayURL(GPhone.MusicURL, "noplay noblock", function(channel)
-			if IsValid(channel) then
-				channel:SetVolume( GPhone.GetData("music_volume") or 1 )
-				channel:Play()
-				
-				if GPhone.MusicStream.Channel then
-					GPhone.MusicStream.Channel:Stop()
+	if string.StartWith(id, "http://") or string.StartWith(id, "https://") then
+		if string.find(id, "youtube.com") then
+			gui.OpenURL(id)
+		else
+			sound.PlayURL(GPhone.MusicURL, "noplay noblock", function(channel)
+				if IsValid(channel) then
+					channel:SetVolume( GPhone.GetData("music_volume") or 1 )
+					channel:Play()
+					
+					if GPhone.MusicStream.Channel then
+						GPhone.MusicStream.Channel:Stop()
+					end
+					
+					GPhone.MusicStream.URL = GPhone.MusicURL
+					GPhone.MusicStream.Playing = true
+					GPhone.MusicStream.Channel = channel
+					GPhone.MusicStream.Length = channel:GetLength()
 				end
-				
-				GPhone.MusicStream.URL = GPhone.MusicURL
-				GPhone.MusicStream.Playing = true
-				GPhone.MusicStream.Channel = channel
-				GPhone.MusicStream.Length = channel:GetLength()
-			end
-		end)
+			end)
+		end
 	else
 		sound.PlayFile(GPhone.MusicURL, "noplay noblock", function(channel)
 			if IsValid(channel) then
@@ -935,6 +1008,8 @@ function GPhone.DownloadImage( url, size, hack, style )
 		table.insert(GPhone.ImageHistory, data)
 		table.insert(GPhone.ImageQueue, data)
 	else
+		local data = {URL = url, Size = size or 128, Style = ""}
+		table.insert(GPhone.ImageHistory, data)
 		if string.EndsWith(url, "png") or string.EndsWith(url, "jpg") or string.EndsWith(url, "jpeg") then
 			GPhone.CachedImages[url] = Material(url, "smooth")
 		else
