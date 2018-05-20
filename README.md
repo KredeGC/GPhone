@@ -9,28 +9,14 @@ Batteries not included."
 
 ## Customer reviews
 >"This screen is brighter than my future!" - Depressed guy
-
 >"Now i can contact mein Fürher more easily!" - Oberleutnant Jonis
-
 >"I don't even know how to use it!" - Average customer
 
 
 
-## Features
-* An iPhone (Duh).
-* Colorable cover (Changes with weaponcolor).
-* Colorable cursor (Changes with playercolor).
-* App framework - Uses the same syntax as Derma Panels.
-* Custom cover materials.
-* C_model hands.
-* Online background and app-icon support.
-* Web browser support.
-* Online and offline music support.
-
-
-
-## App Creation
-[here's a link](https://github.com/KredeGC/GPhone/wiki).
+## Links
+[Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=1370983401)
+[App Creation](https://github.com/KredeGC/GPhone/wiki)
 
 
 
