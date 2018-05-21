@@ -1,62 +1,26 @@
-APP.Name = "StormFox"
-APP.Author = "Dickson"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/weather.png"
-APP.Run = (function( frame, w, h )
-	function frame:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
-	end
-	
-	if !StormFox then
-		local install = GPnl.AddPanel( frame, "button" )
-		install:SetPos( 32, h/2 - 64 )
-		install:SetSize( w-64, 128 )
-		function install:Paint( x, y, w, h )
-			draw.RoundedBox( 8, 0, 0, w, h, Color( 150, 150, 150, 255 ) )
-			draw.SimpleText("Get StormFox", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		end
-		function install:OnClick()
-			gui.OpenURL( "http://steamcommunity.com/sharedfiles/filedetails/?id=1132466603" )
-		end
-	else
-		local scroll = GPnl.AddPanel( frame, "scroll" )
-		scroll:SetPos( 0, 64 )
-		scroll:SetSize( w, h-64 )
-		
-		if StormFox then
-			local weather = StormFox.GetNetworkData("WeekWeather",{})
-			local size = 128
-			
-			for k = 1, 7 do
-				local data = weather[k]
-				if !data then continue end
-				local pnl = GPnl.AddPanel( scroll )
-				pnl:SetPos( 0, 6 + (k-1)*size )
-				pnl:SetSize( w, size )
-				pnl.name = StormFox.GetWeatherType(data.name):GetName( temp, data.wind, data.thunder  )
-				pnl.mat = StormFox.GetWeatherType(data.name):GetIcon( temp, data.wind, data.thunder )
-				pnl.temp = math.Round(data.temp, 1).."°C"
-				function pnl:Paint( x, y, w, h )
-					draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
-					draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
-					
-					draw.SimpleText(self.name, "GPTitle", w/2, 54/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-					draw.SimpleText(self.temp, "GPMedium", w-8, 54/2, Color(70, 70, 70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-					
-					surface.SetDrawColor( 70, 70, 70 )
-					surface.SetMaterial( self.mat )
-					surface.DrawTexturedRect( 8, 8, h-16, h-16 )
-				end
-			end
-		end
-		
-		local header = GPnl.AddPanel( frame )
-		header:SetPos( 0, 0 )
-		header:SetSize( w, 64 )
-		function header:Paint( x, y, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
-			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
-			
-			draw.SimpleText("Weather Forecast", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		end
-	end
-end)
+APP.Name        = "TestApp"                       -- The name of the App
+APP.Author      = "TesterChester"                 -- The author's name
+APP.Negative    = false                           -- Whether the App should use negative top-colors or not
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/weather.png"  -- The icon. Can point to a local file or an online file
+function APP.Run( frame, w, h, ratio )            -- Called when the App is first opened (frame, width, height, aspect ratio)
+    function frame:Paint( x, y, w, h )
+        draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
+    end
+    
+    local button = GPnl.AddPanel( frame, "panel" ) -- Creates a panel of type "panel"
+    button:SetPos( 32*ratio, 32*ratio )            -- By multiplying with "ratio" we can support all resolutions
+    button:SetSize( w - 64*ratio, 64*ratio )
+    button.Color = Color( 0, 255, 0 ) -- Green color
+    function button:Paint( x, y, w, h )
+        draw.RoundedBox( 0, 0, 0, w, h, button.Color ) -- Paint the button using the color
+    end
+    function button:OnClick() -- Called when we click
+        button.Color = Color( 255, 0, 0 ) -- Red color
+    end
+end
+function APP.Think( frame, w, h, ratio ) -- Called every time the SWEP.Think function is called
+    print("thonk")
+end
+function APP.Stop( frame ) -- Called when the App is closed
+    print("closed")
+end
