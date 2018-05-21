@@ -4,7 +4,7 @@ function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
 	frame.front = LocalPlayer():GetNWBool("GPSelfie")
-	frame.fov = 90
+	frame.fov = 80
 	
 	function frame:OnScroll( num )
 		self.fov = math.Clamp(self.fov - num*5, 5, 100)

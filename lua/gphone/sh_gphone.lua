@@ -1,6 +1,8 @@
 CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
 CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
 
+GPDefaultApps = {"appstore", "settings", "camera", "photos"}
+
 file.CreateDir("gphone/users")
 if CLIENT then
 	file.CreateDir("gphone/screens")
@@ -61,7 +63,6 @@ local function loadApps()
 	end
 end
 loadApps()
--- hook.Add("PostGamemodeLoaded", "GPhoneInitApps", loadApps)
 
 local selfietranslate = {}
 selfietranslate[ ACT_MP_STAND_IDLE ] 		= ACT_HL2MP_IDLE_PISTOL
@@ -79,12 +80,6 @@ hook.Add("TranslateActivity", "GPhoneSelfieActivity", function(ply, act)
 end)
 
 if SERVER then
-	hook.Add("PlayerAuthed", function(ply)
-		--[[net.Start("GPhone_LoadApps")
-			net.WriteTable({})
-		net.Broadcast()]]
-	end)
-	
 	concommand.Add("gphone_reloadapps", function(ply)
 		if !ply:IsAdmin() then return end
 		loadApps()
@@ -113,9 +108,13 @@ else
 	if GetConVar("gphone_bob") == nil then
 		CreateClientConVar("gphone_bob", "1", true, false, "Amount of viewmodel bobbing")
 	end
+	if GetConVar("gphone_hands") == nil then
+		CreateClientConVar("gphone_hands", "0", true, false, "Override C_Hands with default viewmodel")
+	end
 	if GetConVar("gphone_hints") == nil then
 		CreateClientConVar("gphone_hints", "1", true, false, "Enable or disable hints")
 	end
+	
 	if GetConVar("gphone_ampm") == nil then
 		CreateClientConVar("gphone_ampm", "0", true, false, "Whether to use AM/PM or 24-hour clock")
 	end
@@ -188,6 +187,11 @@ else
 			Command = "gphone_sf"
 		})
 		
+		panel:AddControl("CheckBox", {
+			Label = "Override custom hands with placeholder",
+			Command = "gphone_hands"
+		})
+		
 		panel:AddControl( "Slider", {
 			Label = "Viewmodel bobbing",
 			Command = "gphone_bob",
@@ -245,6 +249,14 @@ else
 			Label = "Clear image cache",
 			Command = "gphone_clearcache"
 		})
+		
+		local but = panel:AddControl("Button", {
+			Label = "Factory Reset",
+			Command = "gphone_reset"
+		})
+		
+		but:SetTextColor( Color(255, 0, 0) )
+		but:SetToolTip( "Warning! Resets all data from the phone" )
 	end
 
 	hook.Add("PopulateToolMenu", "GPhoneCvarsPanel", function()

@@ -25,8 +25,9 @@ function APP.Run( frame, w, h, ratio )
 				
 				surface.SetFont("GPMedium")
 				local s = surface.GetTextSize(song.url)
-				if s > w - 40 then
-					draw.SimpleText(song.url or "Unknown", "GPMedium", w-40, h/2, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				local max = 40 * ratio
+				if s > w - max then
+					draw.SimpleText(song.url or "Unknown", "GPMedium", w - max, h/2, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 				else
 					draw.SimpleText(song.url or "Unknown", "GPMedium", 4, h/2, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 				end
@@ -63,13 +64,30 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 2, w, h-2, Color( 45, 45, 125, 255 ) )
 		draw.RoundedBox( 0, 0, 0, w, 2, Color( 25, 25, 100, 255 ) )
 		
-		local text = GPhone.GetInputText() or GPhone.MusicStream.URL or GPhone.MusicURL
+		local music = GPhone.MusicStream
+		if music and music.Channel and music.Length then
+			local mx,my = GPhone.GetCursorPos()
+			local p = math.Clamp((mx - 4 * ratio) / (w - 8 * ratio), 0, 1)
+			if mx >= x and my >= y and mx <= x + w and my <= y + h then
+				local time = p * music.Length
+				
+				draw.SimpleText(string.FormattedTime( time, "%02i:%02i" ), "GPSmall", mx - (p*2-1) * 20 * ratio, h - 16 * ratio, Color(230, 230, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+				
+				draw.SimpleText(string.FormattedTime( music.Channel:GetTime(), "%02i:%02i" ), "GPSmall", 4 * ratio, h - 16 * ratio, Color(230, 230, 230, 255*p), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM)
+				draw.SimpleText(string.FormattedTime( music.Length, "%02i:%02i" ), "GPSmall", w - 4 * ratio, h - 16 * ratio, Color(230, 230, 230, 255*(1-p)), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+			else
+				draw.SimpleText(string.FormattedTime( music.Channel:GetTime(), "%02i:%02i" ), "GPSmall", 4 * ratio, h - 16 * ratio, Color(230, 230, 230), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM)
+				draw.SimpleText(string.FormattedTime( music.Length, "%02i:%02i" ), "GPSmall", w - 4 * ratio, h - 16 * ratio, Color(230, 230, 230), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+			end
+		end
+		
+		local text = GPhone.GetInputText() or music.URL or GPhone.MusicURL
 		if text then
 			surface.SetFont("GPMedium")
 			local size = surface.GetTextSize(text)
 			
 			if size > w then
-				draw.SimpleText(text, "GPMedium", w/2 + (size/2-w/2)*math.sin(RealTime()), 4, Color(230,230,230), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+				draw.SimpleText(text, "GPMedium", w/2 + (size/2 - w/2 + 4 * ratio)*math.sin(RealTime()), 4, Color(230,230,230), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 			else
 				draw.SimpleText(text, "GPMedium", w/2, 4, Color(230,230,230), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 			end
@@ -116,16 +134,18 @@ function APP.Run( frame, w, h, ratio )
 	timeslider:SetPos( 4 * ratio, footer:GetHeight() - 12 * ratio )
 	timeslider:SetSize( footer:GetWidth() - 8 * ratio, 8 * ratio )
 	function timeslider:OnClick()
-		if !GPhone.MusicStream or !GPhone.MusicStream.Channel then return end
-		local channel = GPhone.MusicStream.Channel
-		local x = CurrentMousePos.x
+		local music = GPhone.MusicStream
+		if !music or !music.Channel then return end
+		local channel = music.Channel
+		local x = GPhone.GetCursorPos()
 		local w = timeslider:GetWidth()
-		local p = x/w
-		channel:SetTime( p * GPhone.MusicStream.Length )
+		local p = (x - ratio * 4) / w
+		channel:SetTime( p * music.Length )
 	end
 	function timeslider:Paint( x, y, w, h )
-		if GPhone.MusicStream and GPhone.MusicStream.Channel then
-			local p = (GPhone.MusicStream.Channel:GetTime()/GPhone.MusicStream.Length)
+		local music = GPhone.MusicStream
+		if music and music.Channel then
+			local p = (music.Channel:GetTime()/music.Length)
 			
 			draw.RoundedBox( 0, w*p, 0, w*(1-p), h, Color( 230, 230, 230, 255 ) )
 			draw.RoundedBox( 0, 0, 0, w*p, h, Color( 85, 85, 200, 255 ) )

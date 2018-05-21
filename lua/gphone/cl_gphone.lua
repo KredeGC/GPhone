@@ -10,7 +10,6 @@ if !GPhone then
 	GPhone.HTML = {}
 	GPhone.Log = {}
 	GPhone.Apps = {}
-	GPhone.DefaultApps = {"appstore", "settings", "camera", "photos", "contacts"}
 	
 	GPhone.CurrentApp = nil
 	GPhone.CurrentFrame = nil
@@ -41,6 +40,7 @@ if !GPhone then
 	}
 end
 
+
 local function parentPos( p )
 	if p then
 		local px,py = parentPos( p.parent )
@@ -50,6 +50,16 @@ local function parentPos( p )
 		return 0,0
 	end
 end
+
+local function resetGPhoneData()
+	local tbl = {
+		apps = table.Copy(GPDefaultApps or {"appstore", "settings"}),
+		background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
+	}
+	file.Write("gphone/users/client.txt", util.TableToJSON(tbl))
+	GPhone.Data = tbl
+end
+
 
 function GPhone.GetAppSize(spacing, rows)
 	local cv = GetConVar("gphone_rows")
@@ -198,6 +208,7 @@ GPhone.CamMV = CreateMaterial(
 	}
 )
 
+
 concommand.Add("gphone_redownloadimages", function()
 	local tbl = table.Copy(GPhone.ImageHistory)
 	GPhone.CachedImages = {}
@@ -226,6 +237,31 @@ concommand.Add("gphone_clearcache", function()
 	end
 end)
 
+concommand.Add("gphone_reset", function()
+	GPhone.StopMusic()
+	GPhone.CloseInput()
+	GPhone.Log = {}
+	
+	GPhone.MovingApp = nil
+	GPhone.MoveMode = nil
+	GPhone.MusicURL = nil
+	GPhone.AppScreen.Enabled = false
+	
+	for name,_ in pairs(GPhone.Panels) do
+		GPhone.StopApp( name )
+	end
+	
+	local cv = GetConVar("gphone_sync")
+	if game.SinglePlayer() or cv and cv:GetBool() then
+		resetGPhoneData()
+	else
+		net.Start("GPhone_Reset")
+		net.SendToServer()
+	end
+	
+	GPhone.DownloadImage( "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg", 512, true, "background-color: #FFF" )
+end)
+
 
 net.Receive("GPhone_Load_Client", function(len)
 	local cv = GetConVar("gphone_sync")
@@ -234,12 +270,7 @@ net.Receive("GPhone_Load_Client", function(len)
 			local tbl = util.JSONToTable( file.Read("gphone/users/client.txt", "DATA") )
 			GPhone.Data = tbl
 		else
-			local tbl = {
-				apps = GPhone.DefaultApps or {"appstore", "settings"},
-				background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/background.jpg"
-			}
-			file.Write("gphone/users/client.txt", util.TableToJSON(tbl))
-			GPhone.Data = tbl
+			resetGPhoneData()
 		end
 	else
 		local tbl = net.ReadTable()
@@ -477,6 +508,7 @@ function GPhone.InstallApp( name )
 end
 
 function GPhone.UninstallApp( name )
+	if table.HasValue(GPDefaultApps, name) then return false end
 	local apps = GPhone.Data.apps
 	if file.Exists("gphone/apps/"..name..".txt", "DATA") then
 		file.Delete("gphone/apps/"..name..".txt")
@@ -938,6 +970,10 @@ function GPhone.StartMusic( id )
 			end)
 		end
 	else
+		if !file.Exists(GPhone.MusicURL, "GAME") then
+			GPhone.MusicURL = "sound/"..GPhone.MusicURL
+		end
+		
 		sound.PlayFile(GPhone.MusicURL, "noplay noblock", function(channel)
 			if IsValid(channel) then
 				channel:SetVolume( GPhone.GetData("music_volume") or 1 )
@@ -986,7 +1022,7 @@ function GPhone.ToggleMusic( play )
 end
 
 function GPhone.GetMusic()
-	if GPhone.MusicStream.Playing and GPhone.MusicStream.Channel then
+	if GPhone.MusicStream.Channel then
 		return GPhone.MusicStream
 	end
 	return false

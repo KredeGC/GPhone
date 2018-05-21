@@ -33,7 +33,7 @@ SWEP.ViewModelFlip			= false
 SWEP.ViewModel				= "models/weapons/c_garry_phone.mdl"
 SWEP.WorldModel				= "models/nitro/iphone4.mdl"
 SWEP.DrawCrosshair			= false
-SWEP.UseHands				= true
+SWEP.UseHands				= false
 
 SWEP.ViewModelBones = {
 	["ValveBiped.Bip01_R_Finger41"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 2.005, 7.734) },
@@ -47,7 +47,8 @@ SWEP.ViewModelBones = {
 	["ValveBiped.Bip01_R_Finger22"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, -0.002, -6.613) },
 	["ValveBiped.Bip01_R_Finger3"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-1.554, 0.397, 12.392) },
 	["ValveBiped.Bip01_R_Finger1"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(3.894, 3.219, 0) },
-	["ValveBiped.Bip01_R_Finger0"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(5.468, -0.203, 54.722) }
+	["ValveBiped.Bip01_R_Finger0"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(6.468, -2.203, 54.722) },
+	["ValveBiped.Bip01_R_Finger01"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-2, 2, 0) }
 }
 
 
@@ -506,6 +507,10 @@ end
 
 function SWEP:OnRemove()
 	if CLIENT then
+		if IsValid(self.HandModel) then
+			self.HandModel:Remove()
+		end
+		
 		GPhone.CursorEnabled = false
 		
 		for k,v in pairs(file.Find("gphone/screens/*.jpg", "DATA")) do
@@ -1095,6 +1100,30 @@ function SWEP:DrawWeaponSelection( x, y, wide, tall, alpha )
 		surface.SetDrawColor( 255, 255, 255, alpha )
 		surface.SetTexture( self.WepSelectIcon )
 		surface.DrawTexturedRect( x, y, wide, tall )
+	end
+end
+
+
+function SWEP:PostDrawViewModel( vm )
+	local cv = GetConVar("gphone_hands")
+	if !cv or !cv:GetBool() then
+		local hands = self.Owner:GetHands()
+		if IsValid( hands ) then hands:DrawModel() end
+	else
+		if !IsValid(self.HandModel) then
+			local mdl = ClientsideModel("models/weapons/c_arms_citizen.mdl", RENDERGROUP_OPAQUE)
+			mdl:SetBodygroup( 1, 1 )
+			mdl:SetNoDraw(true)
+			mdl:SetParent( vm )
+			mdl:AddEffects( EF_BONEMERGE )
+			function mdl:GetPlayerColor()
+				return Vector(0, 0, 0)
+			end
+			self.HandModel = mdl
+		end
+		
+		local hands = self.HandModel
+		if IsValid( hands ) then hands:DrawModel() end
 	end
 end
 

@@ -1,4 +1,5 @@
 util.AddNetworkString( "GPhone_Change_Data" )
+util.AddNetworkString( "GPhone_Reset" )
 util.AddNetworkString( "GPhone_Load_Client" )
 util.AddNetworkString( "GPhone_Load_Apps" )
 util.AddNetworkString( "GPhone_Selfie" )
@@ -31,6 +32,17 @@ addResources("materials/gphone")
 addResources("materials/models/nitro")
 addResources("sound/gphone")
 
+local function resetGPhoneData( ply, id )
+	local tbl = {
+		apps = table.Copy(GPhone.DefaultApps or {"appstore", "settings"}),
+		background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
+	}
+	file.Write("gphone/users/"..id..".txt", util.TableToJSON(tbl))
+	net.Start( "GPhone_Load_Client" )
+		net.WriteTable( tbl )
+	net.Send( ply )
+end
+
 hook.Add("PlayerAuthed", "GPhoneLoadClientData", function(ply, stid)
 	local id = util.SteamIDTo64( ply:SteamID() )
 	if game.SinglePlayer() then
@@ -43,14 +55,7 @@ hook.Add("PlayerAuthed", "GPhoneLoadClientData", function(ply, stid)
 			net.WriteTable( util.JSONToTable(str) )
 		net.Send( ply )
 	else
-		local tbl = {
-			apps = GP.DefaultApps or {"appstore", "settings"},
-			background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/background.jpg"
-		}
-		file.Write("gphone/users/"..id..".txt", util.TableToJSON(tbl))
-		net.Start( "GPhone_Load_Client" )
-			net.WriteTable( tbl )
-		net.Send( ply )
+		resetGPhoneData( ply, id )
 	end
 end)
 
@@ -68,6 +73,14 @@ net.Receive("GPhone_Change_Data", function(len, ply)
 		local str = net.ReadTable()
 		local id = util.SteamIDTo64( ply:SteamID() )
 		file.Write("gphone/users/"..id..".txt", util.TableToJSON(str))
+	end
+end)
+
+net.Receive("GPhone_Reset", function(len, ply)
+	local cv = GetConVar("gphone_sync")
+	if !game.SinglePlayer() and (cv or !cv:GetBool()) then
+		local id = util.SteamIDTo64( ply:SteamID() )
+		resetGPhoneData( ply, id )
 	end
 end)
 

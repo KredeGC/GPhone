@@ -13,7 +13,7 @@ function APP.Run( frame, w, h, ratio )
 		scroll:Clear()
 		local count = -1
 		for name,app in pairs(GPhone.GetApps()) do
-			if GPhone.DefaultApps and table.HasValue(GPhone.DefaultApps, name) then continue end
+			if GPDefaultApps and table.HasValue(GPDefaultApps, name) then continue end
 			count = count + 1
 			
 			local but = GPnl.AddPanel( scroll )

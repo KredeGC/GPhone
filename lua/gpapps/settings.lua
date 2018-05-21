@@ -245,6 +245,21 @@ function APP.Run( frame, w, h, ratio )
 		RunConsoleCommand("gphone_redownloadimages")
 	end
 	
+	space = space + 64 * ratio
+	
+	local reset = GPnl.AddPanel( scroll )
+	reset:SetSize( w, 64 * ratio )
+	reset:SetPos( 0, space )
+	function reset:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("Factory Reset", "GPMedium", w/2, h/2, Color(255, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	function reset:OnClick()
+		RunConsoleCommand("gphone_reset")
+	end
+	
 	local header = GPnl.AddPanel( debugger )
 	header:SetPos( 0, 0 )
 	header:SetSize( w, 64 * ratio )
