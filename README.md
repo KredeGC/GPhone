@@ -7,13 +7,6 @@ Listen to music, browse the internet, execute order 66 and much more! (You can't
 Get yours today, for the low, low price of 0$. What a deal!
 Batteries not included."
 
-## Customer reviews
->"This screen is brighter than my future!" - Depressed guy
-
->"Now i can contact mein Fürher more easily!" - Oberleutnant Jonis
-
->"I don't even know how to use it!" - Average customer
-
 
 
 ## Links
