@@ -1,7 +1,7 @@
 APP.Name        = "TestApp"                       -- The name of the App
 APP.Author      = "TesterChester"                 -- The author's name
 APP.Negative    = false                           -- Whether the App should use negative top-colors or not
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/gphone/weather.png"  -- The icon. Can point to a local file or an online file
+APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/weather.png"  -- The icon. Can point to a local file or an online file
 function APP.Run( frame, w, h, ratio )            -- Called when the App is first opened (frame, width, height, aspect ratio)
     function frame:Paint( x, y, w, h )
         draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
