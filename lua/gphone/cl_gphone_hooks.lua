@@ -1,3 +1,16 @@
+local lastqueue = 0
+local noicon = Material("noicon.png", "nocull smooth")
+local GPLoadingRT = GetRenderTarget("GPLoadingRT2", 512, 512, false)
+GPLoadingMT = CreateMaterial(
+	"GPLoadMT2",
+	"UnlitGeneric",
+	{
+		["$basetexture"] = GPLoadingRT,
+		["$vertexcolor"] = 1,
+		["$vertexalpha"] = 1
+	}
+)
+
 hook.Add("Think", "GPhoneQueueImage", function()
 	for _,html in pairs(GPhone.HTML) do
 		if IsValid(html) then
@@ -15,60 +28,99 @@ hook.Add("Think", "GPhoneQueueImage", function()
 		end
 	end
 	
-	for k,data in pairs(GPhone.ImageQueue) do
-		if GPhone.CachedImages[data.URL] then continue end
-		
-		if !ImgDownloadTime and !ImgReady and !IsValid(DownloadHTML) then
-			DownloadHTML = vgui.Create( "HTML" )
-			DownloadHTML:SetPos(ScrW()-1, ScrH()-1)
-			DownloadHTML:SetSize(data.Size, data.Size)
-			DownloadHTML:SetHTML([[
-				<style type="text/css">
-					html
-					{
-						overflow:hidden;
-						]]..(data.SizeHack and "margin: -8px -8px;" or "margin: 0px 0px;")..[[
-					}
-					img
-					{
-						]]..(data.Style or "")..[[
-					}
-				</style>
+	local count = table.Count(GPhone.ImageQueue)
+	if count > 0 then
+		--if lastqueue != count then
+			lastqueue = count
+			
+			render.PushRenderTarget(GPLoadingRT)
+			render.Clear(0, 0, 0, 255, true, true)
+			cam.Start2D()
+				surface.SetDrawColor(255, 255, 255)
+				surface.SetMaterial( noicon )
+				surface.DrawTexturedRect( 0, 0, 512, 512 )
 				
-				<body>
-					<img src="]]..data.URL..[[" alt="]]..data.URL..[[" width="]]..data.Size..[[" height="]]..data.Size..[[" />
-				</body>
-			]])
+				surface.SetDrawColor(255, 255, 255)
+				surface.SetTexture( surface.GetTextureID("vgui/loading-rotate") )
+				surface.DrawTexturedRectRotated( 256, 256, 512, 512, RealTime()*360 )
+				
+				draw.SimpleText("Loading", "GPLoading", 512/2, 512/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+				draw.SimpleText(count, "GPLoading", 512/2, 512/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+			cam.End2D()
+			render.PopRenderTarget()
+			
+			GPLoadingMT:SetTexture("$basetexture", GPLoadingRT)
+		--end
+		
+		for k,data in pairs(GPhone.ImageQueue) do
+			if GPhone.CachedImages[data.URL] then continue end
+			
+			if !ImgDownloadTime and !ImgReady and !IsValid(DownloadHTML) then
+				DownloadHTML = vgui.Create( "HTML" )
+				DownloadHTML:SetPos(ScrW()-1, ScrH()-1)
+				DownloadHTML:SetSize(data.Size, data.Size)
+				DownloadHTML:SetHTML([[
+					<style type="text/css">
+						html
+						{
+							overflow:hidden;
+							]].."margin: -8px -8px;"..[[
+						}
+						img
+						{
+							]]..(data.Style or "")..[[
+						}
+					</style>
+					
+					<body>
+						<img src="]]..data.URL..[[" alt="]]..data.URL..[[" width="]]..data.Size..[[" height="]]..data.Size..[[" />
+					</body>
+				]])
+			end
+			
+			local tex = DownloadHTML:GetHTMLMaterial()
+			
+			if !ImgReady and tex and !DownloadHTML:IsLoading() then
+				ImgDownloadTime = CurTime() + 0.1
+				ImgReady = true
+			end
+			
+			if ImgReady and ImgDownloadTime < CurTime() then
+				ImgReady = nil
+				ImgDownloadTime = nil
+				local scale_x,scale_y = DownloadHTML:GetWide() / tex:Width(),DownloadHTML:GetTall() / tex:Height()
+				local matdata = {
+					["$basetexture"] = tex:GetName(),
+					["$basetexturetransform"] = "center 0 0 scale "..scale_x.." "..scale_y.." rotate 0 translate 0 0",
+					["$vertexcolor"] = 1,
+					["$vertexalpha"] = 1,
+					["$nocull"] = 1,
+					["$model"] = 1
+				}
+				local id = string.Replace(tex:GetName(), "__vgui_texture_", "")
+				GPhone.CachedImages[data.URL] = CreateMaterial("GPhone_CachedImage_"..id, "UnlitGeneric", matdata)
+				GPhone.ImageQueue[k] = nil
+				DownloadHTML:Remove()
+				DownloadHTML = nil
+			end
+			
+			break
 		end
+	elseif lastqueue != count then -- No need to update if we're not downloading anything
+		lastqueue = count
+		render.PushRenderTarget(GPLoadingRT)
+		render.Clear(0, 0, 0, 255, true, true)
+		cam.Start2D()
+			surface.SetDrawColor(255, 255, 255)
+			surface.SetMaterial( noicon )
+			surface.DrawTexturedRect( 0, 0, 512, 512 )
+			
+			draw.SimpleText("Image", "GPLoading", 512/2, 512/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+			draw.SimpleText("Not Found", "GPLoading", 512/2, 512/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+		cam.End2D()
+		render.PopRenderTarget()
 		
-		local tex = DownloadHTML:GetHTMLMaterial()
-		
-		if !ImgReady and tex and !DownloadHTML:IsLoading() then
-			ImgDownloadTime = CurTime() + 0.1
-			ImgReady = true
-		end
-		
-		if ImgReady and ImgDownloadTime < CurTime() then
-			ImgReady = nil
-			ImgDownloadTime = nil
-			local scale_x,scale_y = DownloadHTML:GetWide() / tex:Width(),DownloadHTML:GetTall() / tex:Height()
-			local matdata =
-			{
-				["$basetexture"] = tex:GetName(),
-				["$basetexturetransform"] = "center 0 0 scale "..scale_x.." "..scale_y.." rotate 0 translate 0 0",
-				["$vertexcolor"] = 1,
-				["$vertexalpha"] = 1,
-				["$nocull"] = 1,
-				["$model"] = 1
-			}
-			local id = string.Replace(tex:GetName(), "__vgui_texture_", "")
-			GPhone.CachedImages[data.URL] = CreateMaterial("GPhone_CachedImage_"..id, "UnlitGeneric", matdata)
-			GPhone.ImageQueue[k] = nil
-			DownloadHTML:Remove()
-			DownloadHTML = nil
-		end
-		
-		break
+		GPLoadingMT:SetTexture("$basetexture", GPLoadingRT)
 	end
 end)
 
@@ -76,7 +128,7 @@ hook.Add("HUDShouldDraw", "GPhoneHideWPSelection", function(name)
 	local ply = LocalPlayer()
 	if IsValid(ply) then
 		local wep = ply:GetActiveWeapon()
-		if IsValid(wep) and wep:GetClass() == "weapon_gphone" then
+		if IsValid(wep) and wep:GetClass() == "gmod_gphone" then
 			if GPhone.CursorEnabled and name == "CHudWeaponSelection" then return false end
 		end
 	end
@@ -86,7 +138,7 @@ local matflash = Material( "sprites/light_ignorez" )
 
 hook.Add("PostPlayerDraw", "DrawGFlashlight", function(ply)
 	local wep = ply:GetActiveWeapon()
-	if ply:FlashlightIsOn() and IsValid(wep) and wep:GetClass() == "weapon_gphone" then
+	if ply:FlashlightIsOn() and IsValid(wep) and wep:GetClass() == "gmod_gphone" then
 		if ply != LocalPlayer() or GetViewEntity() != LocalPlayer() then
 			local id = ply:LookupAttachment("anim_attachment_RH")
 			if !id then return end
@@ -113,7 +165,7 @@ end)
 
 hook.Add("InputMouseApply", "GPhoneMousePos", function( cmd, x, y, angle )
 	local wep = LocalPlayer():GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() == "weapon_gphone" and GPhone.CursorEnabled then
+	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and GPhone.CursorEnabled then
 		local cv = GetConVar("gphone_sensitivity")
 		local sens = cv and cv:GetFloat() or 4.6
 		
@@ -137,47 +189,16 @@ hook.Add("ShouldDrawLocalPlayer", "GPhoneDrawSelfiePlayer", function(ply)
 	if GPSelfieRendering then return true end
 end)
 
-hook.Add("RenderScene", "GPCameraRenderScene", function(origin, angles, fov)
-	local ply = LocalPlayer()
-	local wep = ply:GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() == "weapon_gphone" and GPhone.CameraEnabled then
-		local oldWepColor = ply:GetWeaponColor()
-		
-		ply:SetWeaponColor( Vector(0, 0, 0) )
-		render.PushRenderTarget(GPhone.CamRT)
-		
-		render.Clear(0, 0, 0, 255)
-		render.ClearDepth()
-		render.ClearStencil()
-		
-		local mdl = wep.PhoneModel
-		if IsValid(mdl) then
-			angles = mdl:GetAngles()
-			angles:RotateAroundAxis(angles:Up(), 180)
-		end
-		
-		GPCamRendering = true
-		render.RenderView({
-			x = 0,
-			y = 0,
-			w = GPhone.Width,
-			h = GPhone.Height,
-			origin = origin + angles:Forward()*8,
-			angles = angles,
-			fov = 90,
-			drawpostprocess = true,
-			drawhud = false,
-			drawmonitors = false,
-			drawviewmodel = false
-		})
-		GPCamRendering = false
-		
-		render.PopRenderTarget()
-		
-		ply:SetWeaponColor( oldWepColor )
-	end
-end)
 
+local function parentPos( p )
+	if p then
+		local px,py = parentPos( p.parent )
+		local x,y = p.x,p.y
+		return x+px,y+py
+	else
+		return 0,0
+	end
+end
 
 
 function InitGPhoneAppCreator()
@@ -198,17 +219,8 @@ function InitGPhoneAppCreator()
 		draw.RoundedBox(0, 0, 0, self:GetWide(), self:GetTall(), Color(70,70,70))
 	end
 	GPAppCreator:MakePopup()
-	GPAppCreator.Frame = {
-		children = {},
-		x = 0,
-		y = 0,
-		w = GPhone.Width,
-		h = GPhone.Height,
-		Paint = (function( self, x,y,w,h )
-			draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
-		end)
-	}
-	GPAppCreator.Code = "function( frame, w, h )\n    function frame:Paint( x, y, w, h )\n        draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )\n    end\nend"
+	GPAppCreator.Frame = GPhone.CreateRootPanel()
+	GPAppCreator.Code = "function( frame, w, h, ratio )\n    function frame:Paint( x, y, w, h )\n        draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )\n    end\nend"
 	GPAppCreator.Caret = 0
 	GPAppCreator.m_lastcarot = 0
 	GPAppCreator.m_nextblink = 0
@@ -618,9 +630,11 @@ function InitGPhoneAppCreator()
 	function Run:DoClick()
 		local str = RunString( "appinit = "..GPAppCreator.Code, "App Builder", false )
 		if !str and appinit then
-			appinit( GPAppCreator.Frame, GPhone.Width, GPhone.Height )
+			GPAppCreator.Frame = GPhone.CreateRootPanel()
+			GPhone.DebugFunction( appinit, GPAppCreator.Frame, GPhone.Width, GPhone.Height - GPhone.Desk.Offset, GPhone.Resolution )
+			GPhone.CurrentFrame = GPAppCreator.Frame
 		else
-			print(str)
+			GPhone.Debug("[ERROR] in app 'AppBuilder': "..str, false, true)
 		end
 	end
 	
@@ -651,126 +665,49 @@ function InitGPhoneAppCreator()
 	Panel:SetSize(GPhone.Width, GPhone.Height)
 	Panel:SetPos(spacing, spacing)
 	function Panel:Think()
+		local frame = GPhone.CurrentFrame
+		if !frame then return end
+		
+		local mx,my = gui.MousePos()
+		local px,py = self:LocalToScreen( self:GetPos() )
+		local x,y = mx - px, my - py
+		local rx,ry = x / GPhone.Width * 560, y / GPhone.Height * 830
+		
+		GPhone.CursorPos = {x = rx, y = ry}
+		
 		if input.IsMouseDown( MOUSE_LEFT ) and !self.b_leftdown then
 			self.b_leftdown = true
 		elseif !input.IsMouseDown( MOUSE_LEFT ) and self.b_leftdown then
 			self.b_leftdown = false
 			
-			local mx,my = gui.MousePos()
-			local px,py = self:LocalToScreen( self:GetPos() )
-			local x = mx - px
-			local y = my - py
-			local oldpos = GPhone.CursorPos
-			
-			local function sortChildren( pnl )
-				local children = {}
-				
-				local function cutoutParents( pnl )
-					if pnl.parent then
-						pnl.parent.children = nil
-						cutoutParents( pnl.parent )
-					end
-				end
-				
-				local function returnChildren( pnl )
-					if pnl.children and #pnl.children > 0 then
-						local tbl = {}
-						for k,child in pairs(pnl.children) do
-							local c = returnChildren( child )
-							cutoutParents( c )
-							table.insert(tbl, c)
-						end
-						return tbl
-					else
-						table.insert(children, pnl)
-						return pnl
-					end
-				end
-				
-				returnChildren( pnl )
-				
-				return children
-			end
-			
-			local function parentPos( p ) -- Position is relative to the parent
-				if p then
-					local px,py = parentPos( p.parent )
-					local x,y = p.x,p.y
-					return x+px,y+py
-				else
-					return 0,0
+			local children = {}
+			local function clickChildren( pnl )
+				local px,py = parentPos( pnl )
+				local bx,by,bw,bh = px,py,pnl.w,pnl.h
+				if x < bx or x > bx + bw or y < by or y > by + bh or !pnl.visible then return end
+				table.insert(children, pnl)
+				for _,child in pairs(pnl.children) do
+					clickChildren( child )
 				end
 			end
 			
-			local function pressChildren( children )
-				local parents = {}
-				for _,child in pairs(children) do
-					local px,py = parentPos( child )
-					local bx,by,bw,bh = px,py,child.w,child.h
-					
-					if x >= bx and x <= bx + bw and y >= by and y <= by + bh and child.visible then -- If we're clicking within the frame
-						if child.OnClick then
-							child.OnClick()
-						end
-						return true
-					elseif !table.HasValue(parents, child.parent) and child.parent and child.parent.parent then -- If it's a root panel, dont add it
-						table.insert(parents, child.parent)
-					end
-				end
-				
-				if #parents > 0 then
-					return pressChildren( parents )
-				else
-					return false
+			clickChildren( frame )
+			
+			local button = children[#children]
+			if button then
+				if button.OnClick then
+					GPhone.DebugFunction( button.OnClick, button, false )
 				end
 			end
-			
-			GPhone.CursorPos = {x = x, y = y}
-			local pnl = GPAppCreator.Frame
-			local children = sortChildren( table.Copy(pnl) )
-			pressChildren( children )
-			GPhone.CursorPos = oldpos
 		end
 	end
 	function Panel:Paint()
-		local oldw,oldh = ScrW(),ScrH()
+		local frame = GPhone.CurrentFrame
+		if !frame then return end
 		
-		local function parentPos( p )
-			if p then
-				local px,py = parentPos( p.parent )
-				local x,y = p.x,p.y
-				return x+px,y+py
-			else
-				return 0,0
-			end
-		end
-		
-		local function drawChildren( pnl )
-			if pnl.children and #pnl.children > 0 then
-				for k,child in pairs(pnl.children) do
-					if !child.visible then continue end
-					
-					if child.Paint then
-						local px,py = parentPos( child.parent )
-						render.SetViewPort(px + child.x, py + child.y, oldw, oldh)
-						render.SetScissorRect(px + child.x, py + child.y, px + child.x + child.w, py + child.y + child.h, true)
-						GPhone.DebugFunction( child.Paint, child, child.x, child.y, child.w, child.h )
-						render.SetScissorRect(0, 0, 0, 0, false)
-					end
-					
-					drawChildren( child )
-				end
-			end
-		end
-		
-		local frame = GPAppCreator.Frame
-		if frame.Paint then
-			render.SetViewPort(0, 0, oldw, oldh)
-			GPhone.DebugFunction( frame.Paint, frame, frame.x, frame.y, frame.w, frame.h )
-		end
-		drawChildren( frame )
-		
-		render.SetViewPort(0, 0, oldw, oldh)
+		surface.SetDrawColor(255, 255, 255)
+		surface.SetMaterial( GPhone.PhoneMT )
+		surface.DrawTexturedRect(0, 0, self:GetWide(), self:GetTall())
 	end
 end
 

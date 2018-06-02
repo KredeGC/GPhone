@@ -3,9 +3,8 @@ APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/hlgo.
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
-	net.Start("GPhone_Selfie")
-		net.WriteBool( true )
-	net.SendToServer()
+	
+	GPhone.EnableSelfie( true )
 	
 	LocalPlayer():EmitSound( "weapons/smg1/switch_burst.wav", 50, math.random(95,105), 1, CHAN_WEAPON )
 	
@@ -29,7 +28,36 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	function frame:Paint( x, y, w, h )
-		local mat = GPhone.RenderCamera( 50, false, function(pos, ang, fov)
+		local mat = GPhone.RenderCamera( 50, false,
+		function(pos, ang, fov)
+			for k,v in pairs(ents.FindByClass("npc_*")) do
+				v:SetNoDraw(true)
+			end
+		end,
+		function(pos, ang, fov)
+			cam.Start3D(pos, ang)
+				for k,v in pairs(ents.FindByClass("npc_*")) do
+					v:SetNoDraw(false)
+					local ent = KleinerRapeModel
+					if !IsValid(ent) then
+						local ent = ClientsideModel("models/kleiner.mdl", RENDER_GROUP_OPAQUE_ENTITY)
+						ent:SetNoDraw( true )
+						ent:DrawShadow( true )
+						ent:ResetSequence( ent:LookupSequence("ragdoll") )
+						ent:SetCycle(0)
+						KleinerRapeModel = ent
+					else
+						ent:SetRenderOrigin( v:GetPos() )
+						ent:SetRenderAngles( v:GetAngles() )
+						ent:SetupBones()
+						ent:FrameAdvance( FrameTime() )
+						ent:DrawModel()
+						ent:SetRenderOrigin()
+						ent:SetRenderAngles()
+					end
+				end
+			cam.End3D()
+			
 			local vm = self.viewmodel
 			local ft = FrameTime()
 			if IsValid(vm) then
@@ -39,6 +67,7 @@ function APP.Run( frame, w, h, ratio )
 					local pos = pos + IronSightsPos.x * ang:Right() * c_iron + IronSightsPos.y * ang:Forward() * c_iron + IronSightsPos.z * ang:Up() * c_iron
 					
 					cam.IgnoreZ(true)
+						render.SetColorModulation( 1, 1, 1 )
 						vm:SetRenderOrigin( pos - ang:Up() )
 						vm:SetRenderAngles( ang )
 						vm:SetupBones()
@@ -63,9 +92,7 @@ function APP.Run( frame, w, h, ratio )
 end
 
 function APP.Focus( frame )
-	net.Start("GPhone_Selfie")
-		net.WriteBool( true )
-	net.SendToServer()
+	GPhone.EnableSelfie( true )
 	LocalPlayer():EmitSound( "weapons/smg1/switch_burst.wav", 50, math.random(95,105), 1, CHAN_WEAPON )
 	frame.f_nextfire = CurTime() + 0.5
 	local vm = frame.viewmodel

@@ -74,7 +74,7 @@ selfietranslate[ ACT_MP_JUMP ] 				= ACT_HL2MP_JUMP_PISTOL
 
 hook.Add("TranslateActivity", "GPhoneSelfieActivity", function(ply, act)
 	local wep = ply:GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() == "weapon_gphone" and ply:GetNWBool("GPSelfie") and selfietranslate[act] then
+	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and ply:GetNWBool("GPSelfie") and selfietranslate[act] then
 		return selfietranslate[act]
 	end
 end)
@@ -88,11 +88,18 @@ if SERVER then
 		net.Broadcast()
 	end)
 else
+	GPErrorTextField = GPErrorTextField or nil
+	
 	list.Add( "CursorMaterials", "effects/select_dot" )
 	list.Add( "CursorMaterials", "vgui/minixhair" )
 	list.Add( "CursorMaterials", "effects/wheel_ring" )
 	list.Add( "CursorMaterials", "gui/faceposer_indicator" )
 	list.Add( "CursorMaterials", "sprites/grip" )
+	list.Add( "CursorMaterials", "vgui/cursors/hand" )
+	list.Add( "CursorMaterials", "vgui/cursors/crosshair" )
+	if !Material("sprites/arrow"):IsError() then
+		list.Add( "CursorMaterials", "sprites/arrow" )
+	end
 	
 	net.Receive("GPhone_Load_Apps", function(l)
 		local tbl = net.ReadTable()
@@ -114,6 +121,15 @@ else
 	if GetConVar("gphone_hints") == nil then
 		CreateClientConVar("gphone_hints", "1", true, false, "Enable or disable hints")
 	end
+	if GetConVar("gphone_lighting") == nil then
+		CreateClientConVar("gphone_lighting", "1", true, false, "Enable or disable dynamic lighting")
+	end
+	
+	
+	if GetConVar("gphone_report") == nil then
+		CreateClientConVar("gphone_report", "1", true, false, "Enable automatic reports when script errors appear")
+	end
+	
 	
 	if GetConVar("gphone_ampm") == nil then
 		CreateClientConVar("gphone_ampm", "0", true, false, "Whether to use AM/PM or 24-hour clock")
@@ -163,18 +179,28 @@ else
 		panel:ClearControls()
 		
 		panel:AddControl("CheckBox", {
+			Label = "Enable automatic bug reporting",
+			Command = "gphone_report"
+		})
+		
+		panel:AddControl("CheckBox", {
 			Label = "Enable fancy Weapon-icon",
 			Command = "gphone_wepicon"
 		})
 		
 		panel:AddControl("CheckBox", {
-			Label = "Enable hints",
-			Command = "gphone_hints"
+			Label = "Enable background blur",
+			Command = "gphone_blur"
 		})
 		
 		panel:AddControl("CheckBox", {
-			Label = "Enable background blur",
-			Command = "gphone_blur"
+			Label = "Enable dynamic lighting",
+			Command = "gphone_lighting"
+		})
+		
+		panel:AddControl("CheckBox", {
+			Label = "Enable hints",
+			Command = "gphone_hints"
 		})
 		
 		panel:AddControl("CheckBox", {
@@ -239,6 +265,44 @@ else
 		})
 		
 		panel:MatSelect( "gphone_cursormat", list.Get( "CursorMaterials" ), true, 0.25, 0.25 )
+	end
+	
+	local function GPDebugSettingsPanel(panel)
+		panel:ClearControls()
+		
+		GPErrorTextField = vgui.Create("DTextEntry", panel)
+		GPErrorTextField:SetText( string.Implode("\n", GPhone.Log) )
+		GPErrorTextField:SetMultiline( true )
+		GPErrorTextField:SetDrawLanguageID( false )
+		GPErrorTextField:SetVerticalScrollbarEnabled( true )
+		GPErrorTextField:SetTall( 512 )
+		GPErrorTextField:SetPlaceholderText( "Nothing logged" )
+		
+		function GPErrorTextField:AllowInput( key )
+			return true
+		end
+		
+		panel:AddItem(GPErrorTextField)
+		
+		panel:AddControl("Button", {
+			Label = "Report error",
+			Command = "gphone_log_report"
+		})
+		
+		panel:AddControl("Button", {
+			Label = "Output log in console",
+			Command = "gphone_log_print"
+		})
+		
+		panel:AddControl("Button", {
+			Label = "Copy log to clipboard",
+			Command = "gphone_log_copy"
+		})
+		
+		panel:AddControl("Button", {
+			Label = "Wipe log",
+			Command = "gphone_log_wipe"
+		})
 		
 		panel:AddControl("Button", {
 			Label = "Redownload images",
@@ -261,6 +325,7 @@ else
 
 	hook.Add("PopulateToolMenu", "GPhoneCvarsPanel", function()
 		spawnmenu.AddToolMenuOption("Options", "GPhone", "GPhone", "Settings", "", "", GPSettingsPanel)
+		spawnmenu.AddToolMenuOption("Options", "GPhone", "GPhoneDebug", "Debugging", "", "", GPDebugSettingsPanel)
 		spawnmenu.AddToolMenuOption("Options", "GPhone", "GPhoneAdmin", "Admin Settings", "", "", GPAdminSettingsPanel)
 	end)
 end

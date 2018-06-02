@@ -100,6 +100,7 @@ function APP.Run( frame, w, h, ratio )
 		local pics,dirs = file.Find("gphone/photos/*.jpg", "DATA")
 		
 		for i,jpg in pairs(pics) do
+			GPhone.DownloadImage( "data/gphone/photos/"..jpg )
 			timer.Simple((i-1)*0.05, function()
 				x = x + 1
 				
@@ -112,7 +113,7 @@ function APP.Run( frame, w, h, ratio )
 				but:SetSize( width, height )
 				but:SetPos( x*width - width, y*height )
 				but.pic = "gphone/photos/"..jpg
-				but.mat = Material("data/gphone/photos/"..jpg)
+				but.mat = GPhone.GetImage( "data/gphone/photos/"..jpg )
 				function but:Paint( x, y, w, h )
 					if frame and frame.m_choose and table.HasValue(frame.m_chosen, but) then
 						draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 200, 255 ) )

@@ -9,7 +9,7 @@ util.AddNetworkString( "GPhone_VoiceCall_Request" )
 util.AddNetworkString( "GPhone_VoiceCall_Answer" )
 util.AddNetworkString( "GPhone_VoiceCall_Stop" )
 
-resource.AddFile( "materials/vgui/entities/weapon_gphone.vmt" )
+resource.AddFile( "materials/vgui/entities/gmod_gphone.vmt" )
 resource.AddFile( "materials/vgui/hud/phone.vmt" )
 
 resource.AddFile( "materials/models/weapons/c_garry_phone.vmt" )
@@ -34,7 +34,7 @@ addResources("sound/gphone")
 
 local function resetGPhoneData( ply, id )
 	local tbl = {
-		apps = table.Copy(GPhone.DefaultApps or {"appstore", "settings"}),
+		apps = table.Copy(GPDefaultApps or {"appstore", "settings"}),
 		background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
 	}
 	file.Write("gphone/users/"..id..".txt", util.TableToJSON(tbl))

@@ -139,7 +139,7 @@ function gframe:new( parent, kind )
 end
 
 function gframe:__tostring()
-	return "GPnl["..self.x..","..self.y..","..self.w..","..self.h.."]["..self.type.."]"
+	return "GPnl["..math.Round(self.x, 2)..","..math.Round(self.y, 2)..","..math.Round(self.w, 2)..","..math.Round(self.h, 2).."]["..self.type.."]"
 end
 
 function gframe:__add( frame )
@@ -174,6 +174,17 @@ local paneltypes = {
 				return pnl
 			end
 			return false
+		end
+		
+		function frame:RemoveTab( name )
+			local pnl = self.b_tabs[name]
+			if pnl then
+				if self.b_tab == pnl then
+					self.b_tab = nil
+				end
+				pnl:Remove()
+				self.b_tabs[name] = nil
+			end
 		end
 		
 		function frame:GetTabs()
@@ -351,6 +362,12 @@ function GPnl.GetTypes()
 	return paneltypes
 end
 
+function GPnl.AddType(name, func)
+	if !paneltypes[name] then
+		paneltypes[name] = func
+	end
+end
+
 function GPnl.AddPanel( parent, kind )
 	local frame = gframe( parent, kind )
 	return frame
@@ -380,7 +397,7 @@ end
 
 hook.Add("PlayerBindPress", "PlayerScrollGPanel", function(ply, bind, pressed)
 	local wep = ply:GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() == "weapon_gphone" and GPhone.CursorEnabled then
+	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and GPhone.CursorEnabled then
 		if bind == "invprev" or bind == "invnext" then
 			local frame = GPhone.CurrentFrame
 			local num = (bind == "invprev" and 1 or -1)

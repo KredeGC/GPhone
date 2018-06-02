@@ -3,7 +3,7 @@ APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camer
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
-	frame.front = LocalPlayer():GetNWBool("GPSelfie")
+	frame.front = GPhone.SelfieEnabled()
 	frame.fov = 80
 	
 	function frame:OnScroll( num )
@@ -30,9 +30,7 @@ function APP.Run( frame, w, h, ratio )
 	function switch:OnClick()
 		local bool = !frame.front
 		frame.front = bool
-		net.Start("GPhone_Selfie")
-			net.WriteBool( bool )
-		net.SendToServer()
+		GPhone.EnableSelfie( bool )
 	end
 	
 	local photo = GPnl.AddPanel( frame )
@@ -60,7 +58,7 @@ function APP.Run( frame, w, h, ratio )
 		
 		file.CreateDir("gphone/photos")
 		
-		GPhone.RenderCamera(frame.fov, frame.front, function(pos, ang)
+		GPhone.RenderCamera(frame.fov, frame.front, nil, function(pos, ang)
 			local data = render.Capture( {
 				format = "jpeg",
 				quality = 100,
@@ -79,14 +77,10 @@ end
 
 function APP.Focus( frame )
 	if frame.front then
-		net.Start("GPhone_Selfie")
-			net.WriteBool( true )
-		net.SendToServer()
+		GPhone.EnableSelfie( true )
 	end
 end
 
 function APP.Stop( frame )
-	net.Start("GPhone_Selfie")
-		net.WriteBool( false )
-	net.SendToServer()
+	GPhone.EnableSelfie( false )
 end

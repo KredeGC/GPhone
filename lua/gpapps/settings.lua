@@ -121,6 +121,28 @@ function APP.Run( frame, w, h, ratio )
 	
 	space = space + 64 * ratio
 	
+	local rows = GPnl.AddPanel( scroll, "textentry" )
+	rows:SetSize( w, 64 * ratio )
+	rows:SetPos( 0, space )
+	rows:SetText( GetConVar("gphone_rows"):GetInt() )
+	function rows:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
+		draw.SimpleText("App rows: "..text, self:GetFont(), w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	function rows:OnEnter( val )
+		local val = tonumber(val)
+		if val then
+			local num = math.max(val, 0)
+			self:SetText( num )
+			RunConsoleCommand("gphone_rows", num)
+		end
+	end
+	
+	space = space + 64 * ratio
+	
 	local brightness = GPnl.AddPanel( scroll, "textentry" )
 	brightness:SetSize( w, 64 * ratio )
 	brightness:SetPos( 0, space )
@@ -293,15 +315,15 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 10 + w/2, w, 2, Color( 80, 80, 80, 255 ) )
 		
 		surface.SetDrawColor(255, 255, 255)
-		surface.SetTexture( surface.GetTextureID( "vgui/entities/weapon_gphone" ) )
+		surface.SetTexture( surface.GetTextureID( "vgui/entities/gmod_gphone" ) )
 		surface.DrawTexturedRect( 4, 16, w/2-8, w/2-8 )
 		
 		draw.SimpleText("GPhone Remade", "GPTitle", w/2 + 4, 16, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText("Created by Krede", "GPMedium", w/2 + 4, 16 + 42, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("Created by Krede", "GPMedium", w/2 + 4, 16 + 42 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		if self.Update then
-			draw.SimpleText("Last update:", "GPMedium", w/2 + 4, 8 + w/2 - 36*2, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(self.Update, "GPMedium", w/2 + 4, 8 + w/2 - 36, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText("Last update:", "GPMedium", w/2 + 4, 8 + w/2 - 36*2 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(self.Update, "GPMedium", w/2 + 4, 8 + w/2 - 36 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		end
 	end
 	
