@@ -7,6 +7,7 @@ function APP.Run( frame, w, h, ratio )
 	frame.m_chosen = {}
 	
 	function frame.Open( pic, mat )
+		frame:SetFullScreen( false )
 		frame:Clear()
 		
 		local bigpic = GPnl.AddPanel( frame )
@@ -70,7 +71,7 @@ function APP.Run( frame, w, h, ratio )
 		end
 		function wallpaper:OnClick()
 			if file.Exists(pic, "DATA") then
-				GPhone.SaveData("background", "data/"..pic)
+				GPhone.SetData("background", "data/"..pic)
 				GPhone.DownloadImage( "data/"..pic, 512, true )
 			end
 		end

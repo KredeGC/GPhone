@@ -135,7 +135,7 @@ function APP.Run( frame, w, h, ratio )
 	function rows:OnEnter( val )
 		local val = tonumber(val)
 		if val then
-			local num = math.max(val, 0)
+			local num = math.Clamp(val, 0, 6)
 			self:SetText( num )
 			RunConsoleCommand("gphone_rows", num)
 		end
@@ -191,7 +191,7 @@ function APP.Run( frame, w, h, ratio )
 		end
 	end
 	function wallpaper:OnEnter( val )
-		GPhone.SaveData("background", val)
+		GPhone.SetData("background", val)
 		GPhone.DownloadImage( val, 512, true )
 	end
 	
@@ -330,10 +330,9 @@ function APP.Run( frame, w, h, ratio )
 	http.Fetch("https://steamcommunity.com/sharedfiles/filedetails/changelog/1370983401", function(body)
 		local start = string.find(body, "Update: ")
 		if start then
-			local stop = string.find(body, "@", start)
+			local stop = string.find(body, "</div>", start)
 			if stop then
-				local text = string.sub(body, start+8, stop-2)
-				content.Update = text
+				content.Update = string.Trim( string.sub(body, start+8, stop-1) )
 			end
 		end
 	end,
@@ -371,6 +370,6 @@ function APP.Run( frame, w, h, ratio )
 		draw.SimpleText("Go to Workshop", "GPMedium", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	function update:OnClick()
-		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=251989385" )
+		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=1370983401" )
 	end
 end

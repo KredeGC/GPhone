@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "gphone/wifi_1"
+	"$translucent" 1
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+}

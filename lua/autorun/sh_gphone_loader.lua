@@ -1,17 +1,14 @@
-local files = file.Find("gphone/*.lua", "LUA")
+local path = "gphone_remade"
+local files = file.Find(path.."/*.lua", "LUA")
 for _,v in pairs(files) do
-	if string.sub(v, 0, 3) == "sv_" then
-		include("gphone/"..v)
-	elseif string.sub(v, 0, 3) == "cl_" then
+	if string.StartWith(v, "sv_") then
 		if SERVER then
-			AddCSLuaFile("gphone/"..v)
-		else
-			include("gphone/"..v)
+			include(path.."/"..v)
 		end
 	else
-		if SERVER then
-			AddCSLuaFile("gphone/"..v)
+		AddCSLuaFile(path.."/"..v)
+		if CLIENT or !string.StartWith(v, "cl_") then
+			include(path.."/"..v)
 		end
-		include("gphone/"..v)
 	end
 end

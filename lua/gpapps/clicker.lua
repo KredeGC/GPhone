@@ -20,6 +20,6 @@ function APP.Run( frame, w, h, ratio )
 	function button:OnClick()
 		self.b_lerp = CurTime() + 0.25
 		local cookies = GPhone.GetData("cookies", 0)
-		GPhone.SaveData("cookies", cookies + 1)
+		GPhone.SetData("cookies", cookies + 1)
 	end
 end

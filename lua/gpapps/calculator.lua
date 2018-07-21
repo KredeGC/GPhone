@@ -1,4 +1,4 @@
-APP.Name = "Camera"
+APP.Name = "Calculator"
 APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camera.png"
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
@@ -45,7 +45,6 @@ function APP.Run( frame, w, h, ratio )
 		end
 	end
 	function photo:OnClick()
-		if !self.last then return end
 		local frame = GPhone.RunApp( "photos" )
 		if frame then
 			frame.Open( self.last, GPhone.GetImage( "data/"..self.last ) )
@@ -75,16 +74,10 @@ function APP.Run( frame, w, h, ratio )
 				h = h
 			} )
 			
-			local name = os.time()..".jpg"
+			local name = game.GetMap().."_"..os.time()..".jpg"
 			file.Write("gphone/photos/"..name, data)
 			GPhone.DownloadImage( "data/gphone/photos/"..name )
 			photo.last = "gphone/photos/"..name
 		end)
-	end
-end
-
-function APP.Focus( frame )
-	if frame.front then
-		GPhone.EnableSelfie( true )
 	end
 end

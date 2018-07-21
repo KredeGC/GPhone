@@ -11,14 +11,14 @@ function APP.Run( frame, w, h, ratio )
 	
 	local function loadapps()
 		scroll:Clear()
-		local count = -1
+		local count = 0
 		for name,app in pairs(GPhone.GetApps()) do
 			if GPDefaultApps and table.HasValue(GPDefaultApps, name) then continue end
 			count = count + 1
 			
 			local but = GPnl.AddPanel( scroll )
 			but:SetSize( w, 64 * ratio )
-			but:SetPos( 0, ( count*64 + 6 ) * ratio )
+			but:SetPos( 0, ( count*64 - 58 ) * ratio )
 			function but:Paint( x, y, w, h )
 				draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 				draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )

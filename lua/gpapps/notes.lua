@@ -26,7 +26,7 @@ function APP.Run( frame, w, h, ratio )
 				note.text = val
 				text.text = val
 				notes[num] = note
-				GPhone.SaveData("notes", notes)
+				GPhone.SetData("notes", notes)
 			end
 			function onCancel()
 				text.b_typing = false
@@ -54,7 +54,7 @@ function APP.Run( frame, w, h, ratio )
 				note.title = val
 				header.title = val
 				notes[num] = note
-				GPhone.SaveData("notes", notes)
+				GPhone.SetData("notes", notes)
 			end
 			function onCancel()
 				header.b_typing = false
@@ -120,7 +120,7 @@ function APP.Run( frame, w, h, ratio )
 				function delete:OnClick()
 					local notes = GPhone.GetData("notes")
 					table.remove(notes, delete:GetParent().num)
-					GPhone.SaveData("notes", notes)
+					GPhone.SetData("notes", notes)
 					frame.Main()
 				end
 				function delete:Paint( x, y, w, h )

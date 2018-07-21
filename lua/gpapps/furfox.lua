@@ -10,6 +10,13 @@ function APP.Run( frame, w, h, ratio )
 	content:SetSize( w, h - 128 * ratio )
 	content:Init()
 	
+	function frame:OpenURL( url )
+		local html = content:GetHTML()
+		if IsValid(html) then
+			html:OpenURL( url )
+		end
+	end
+	
 	local header = GPnl.AddPanel( frame, "panel" )
 	header:SetPos( 0, 0 )
 	header:SetSize( w, 64 * ratio )
@@ -21,7 +28,7 @@ function APP.Run( frame, w, h, ratio )
 	local size = header:GetHeight()
 	
 	local extend = GPnl.AddPanel( header )
-	extend:SetPos( 6 * ratio, 0 )
+	extend:SetPos( 0, 0 )
 	extend:SetSize( size, size )
 	function extend:Paint( x, y, w, h )
 		surface.SetDrawColor(80, 80, 80)
@@ -36,7 +43,7 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	local refresh = GPnl.AddPanel( header )
-	refresh:SetPos( w - size - 6 * ratio, 0 )
+	refresh:SetPos( w - size, 0 )
 	refresh:SetSize( size, size )
 	function refresh:Paint( x, y, w, h )
 		surface.SetDrawColor(80, 80, 80)
@@ -78,11 +85,8 @@ function APP.Run( frame, w, h, ratio )
 			end
 		end
 	end
-	function url:OnEnter( val )
-		local html = content:GetHTML()
-		if IsValid(html) then
-			html:OpenURL( val )
-		end
+	function url:OnEnter( url )
+		frame:OpenURL( url )
 	end
 	
 	url:OnClick()
