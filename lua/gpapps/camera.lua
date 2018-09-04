@@ -1,5 +1,6 @@
-APP.Name = "Camera"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camera.png"
+APP.Name	= "Camera"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camera.png"
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
@@ -19,8 +20,21 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox(0, 0, h - 100 * ratio, w, 100 * ratio, Color(0, 0, 0, 150))
 	end
 	
+	local face = GPnl.AddPanel( frame )
+	face:SetSize( 160 * ratio, 80 * ratio )
+	face:SetPos( w - 160 * ratio, 0 )
+	face:SetVisible( false )
+	function face:Paint( x, y, w, h )
+		surface.SetDrawColor(255, 255, 255)
+		surface.SetTexture( surface.GetTextureID( "vgui/face/grin" ) )
+		surface.DrawTexturedRect( 0, 0, w, h )
+	end
+	function face:OnClick()
+		frame.smile = !frame.smile
+	end
+	
 	local switch = GPnl.AddPanel( frame )
-	switch:SetSize( 80, 80 )
+	switch:SetSize( 80 * ratio, 80 * ratio )
 	switch:SetPos( 0, 0 )
 	function switch:Paint( x, y, w, h )
 		surface.SetDrawColor(255, 255, 255)
@@ -30,6 +44,7 @@ function APP.Run( frame, w, h, ratio )
 	function switch:OnClick()
 		local bool = !frame.front
 		frame.front = bool
+		face:SetVisible( bool )
 		GPhone.EnableSelfie( bool )
 	end
 	
@@ -48,7 +63,7 @@ function APP.Run( frame, w, h, ratio )
 		if !self.last then return end
 		local frame = GPhone.RunApp( "photos" )
 		if frame then
-			frame.Open( self.last, GPhone.GetImage( "data/"..self.last ) )
+			frame:Open( self.last, GPhone.GetImage( "data/"..self.last ) )
 		end
 	end
 	
@@ -80,6 +95,19 @@ function APP.Run( frame, w, h, ratio )
 			GPhone.DownloadImage( "data/gphone/photos/"..name )
 			photo.last = "gphone/photos/"..name
 		end)
+	end
+end
+
+function APP.Think( frame )
+	local p = frame.smile and 1 or 0
+	local ply = LocalPlayer()
+	local flex = ply:GetFlexNum() - 1
+	if flex > 0 then
+		for i = 0, flex do
+			if ply:GetFlexName(i) == "smile" then -- Makes a creepy smile
+				ply:SetFlexWeight( i, p )
+			end
+		end
 	end
 end
 

@@ -11,83 +11,6 @@ GPLoadingMT = CreateMaterial(
 	}
 )
 
-local gpth_last = 0
-local gpth_hooks = { -- First argument is whether it needs to be focused, second is a table of arguments for the hook
-	["HUDShouldDraw"]			= function()
-		return true, "CHudWeaponSelection"
-	end,
-	["ShouldDrawLocalPlayer"]	= function()
-		return false, LocalPlayer()
-	end,
-	["InputMouseApply"]			= function(cmd)
-		return true, cmd, 0, 0, EyeAngles()
-	end,
-	["RenderScene"]				= function()
-		return false, EyePos(), EyeAngles(), 90
-	end,
-	["PlayerBindPress"]			= function()
-		return true, LocalPlayer(), "invprev", true
-	end
-}
-local gpth_exceptions = {
-	["GPhoneMousePos"]			= true,
-	["GPhoneDrawSelfiePlayer"]	= true,
-	["GPhoneHideWPSelection"]	= true,
-	["GPhoneRenderPhoneRT"]		= true,
-	["PlayerScrollGPanel"]		= true
-}
-
-
-hook.Add("StartCommand", "GPhoneConflictCatch", function(ply, cmd)
-	local cv = GetConVar("gphone_debug")
-	if !cv or !cv:GetBool() then return end
-	local ct = CurTime()
-	if gpth_last + 1 > ct then return end -- It's not that intensive, but every frame helps
-	gpth_last = ct
-	
-	local ply = LocalPlayer()
-	if !ply:Alive() or ply:InVehicle() then return end
-	local wep = ply:GetActiveWeapon()
-	if !IsValid(wep) or wep:GetClass() != "gmod_gphone" then return end
-	
-	local errors = {}
-	local addons = engine.GetAddons()
-	for k,argfunc in pairs(gpth_hooks) do
-		for name,func in pairs(hook.GetTable()[k]) do
-			if gpth_exceptions[name] then continue end
-			local args = { argfunc( cmd ) }
-			local focus = table.remove(args, 1)
-			if !GPhone.CursorEnabled and focus then continue end
-			local res = func( unpack(args) )
-			if res != nil then
-				local text = "[Unknown]"
-				local tbl = debug.getinfo(func)
-				if tbl.what == "Lua" then
-					local str = string.gsub(tbl.short_src, "addons/", "")
-					local stop = string.find(str, "/")
-					local f = string.sub(str, 0, stop-1)
-					text = "["..string.upper(f).."]"
-					for _,v in pairs(addons) do
-						if string.find(v.file, f) then
-							text = "["..v.title.."]"
-							break
-						end
-					end
-				end
-				table.insert(errors, text.."["..k.."] "..name)
-			end
-		end
-	end
-	
-	if #errors > 0 then
-		local text = "[ERROR] GPhone has encountered one or more conflicting hooks"
-		for k,v in pairs(errors) do
-			text = text.."\n  "..k..". "..v
-		end
-		GPhone.Debug( text, false, true )
-	end
-end)
-
 
 hook.Add("Think", "GPhoneQueueImage", function()
 	for _,html in pairs(GPhone.HTML) do
@@ -95,12 +18,27 @@ hook.Add("Think", "GPhoneQueueImage", function()
 			if html:IsLoading() then
 				if !html.b_loading then
 					html.b_loading = true
+					html:RunJavascript([[window.onerror = function(msg, url, line, col, error) {
+						gmod.print("Line " + line + ": " + msg);
+					};]])
 					html:RunJavascript([[gmod.getURL( window.location.href );]])
 				end
 			else
 				if html.b_loading then
 					html.b_loading = false
+					html:RunJavascript([[window.onerror = function(msg, url, line, col, error) {
+						gmod.print("Line " + line + ": " + msg);
+					};]])
 					html:RunJavascript([[gmod.getURL( window.location.href );]])
+				elseif !html.b_keepvolume then
+					local vol = GetConVar("gphone_volume")
+					html:RunJavascript([[var x = [];
+					x.push.apply( x, document.getElementsByTagName("VIDEO") );
+					x.push.apply( x, document.getElementsByTagName("AUDIO") );
+					for (i = 0; i < x.length; i++) {
+						var vid = x[i];
+						vid.volume = ]]..(vol and vol:GetFloat() or 1)..[[;
+					}]])
 				end
 			end
 		end
@@ -136,15 +74,8 @@ hook.Add("Think", "GPhoneQueueImage", function()
 				DownloadHTML:SetSize(data.Size, data.Size)
 				DownloadHTML:SetHTML([[
 					<style type="text/css">
-						html
-						{
-							overflow:hidden;
-							]].."margin: -8px -8px;"..[[
-						}
-						img
-						{
-							]]..(data.Style or "")..[[
-						}
+						html { overflow:hidden; margin: -8px -8px; }
+						img { ]]..(data.Style or "")..[[ }
 					</style>
 					
 					<body>
@@ -199,7 +130,7 @@ hook.Add("Think", "GPhoneQueueImage", function()
 	end
 end)
 
-hook.Add("HUDShouldDraw", "GPhoneHideWPSelection", function(name)
+hook.Add("HUDShouldDraw", "_GPhoneHideWPSelection", function(name)
 	local ply = LocalPlayer()
 	if IsValid(ply) then
 		local wep = ply:GetActiveWeapon()
@@ -238,7 +169,7 @@ hook.Add("PostPlayerDraw", "DrawGFlashlight", function(ply)
 	end
 end)
 
-hook.Add("InputMouseApply", "GPhoneMousePos", function( cmd, x, y, angle )
+hook.Add("InputMouseApply", "_GPhoneMouseInput", function( cmd, x, y, angle )
 	local wep = LocalPlayer():GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and GPhone.CursorEnabled then
 		local cv = GetConVar("gphone_sensitivity")
@@ -258,7 +189,7 @@ hook.Add("InputMouseApply", "GPhoneMousePos", function( cmd, x, y, angle )
 	end
 end)
 
-hook.Add("ShouldDrawLocalPlayer", "GPhoneDrawSelfiePlayer", function(ply)
+hook.Add("ShouldDrawLocalPlayer", "_GPhoneDrawSelfiePlayer", function(ply)
 	local wep = LocalPlayer():GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and GPhone.SelfieEnabled() then
 		cam.Start3D()

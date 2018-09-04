@@ -3,8 +3,8 @@ AddCSLuaFile()
 SWEP.PrintName = "GPhone"
 SWEP.Author =	"Krede"
 SWEP.Contact =	"Steam"
-SWEP.Purpose =	"Used for RP. Read addon desc for more info."
-SWEP.Instructions =	"A newer version of an old diamond of mine."
+SWEP.Purpose =	"It's a phone."
+SWEP.Instructions =	"Use it like a phone."
 
 if CLIENT then
 	SWEP.WepSelectIcon = surface.GetTextureID("vgui/hud/phone")
@@ -205,9 +205,11 @@ local function clickFrame( frame, x, y, double )
 	local button = children[#children]
 	if button then
 		if button.OnClick then
-			GPhone.DebugFunction( button.OnClick, button, double )
+			GPhone.DebugFunction( button.OnClick, button, double or false )
+			return true
 		end
 	end
+	return false
 end
 
 local function clickApp( x, y )
@@ -222,6 +224,21 @@ local function clickApp( x, y )
 			break
 		end
 	end
+end
+
+local function getHoverHome( wep, x, y )
+	local home = wep.ScreenInfo.home
+	return x >= home.x and x <= home.x + home.size and y >= home.y and y <= home.y + home.size
+end
+
+local function getHoverApp( x, y )
+	for _,data in pairs(GPhone.GetPage()) do
+		local posx,posy,size,id = data.x,data.y,data.size,data.app
+		if x > posx and x < posx + size and y > posy and y < posy + size then
+			return id
+		end
+	end
+	return false
 end
 
 function SWEP:Think()
@@ -290,16 +307,27 @@ function SWEP:Think()
 		if input.IsMouseDown( MOUSE_LEFT ) and !self.b_leftdown then -- Mouse down
 			self.b_leftdown = true
 			self.b_override = nil
+			self.b_dragging = nil
 			self.b_lefthold = st
 			
-			if !GPhone.AppScreen.Enabled and GPhone.MoveMode then -- Moving apps
-				local windows = GPhone.GetAppPos()
-				local page = math.Clamp(GPhone.Page, 1, #windows)
-				
-				for k,data in pairs(windows[page]) do
+			local quick = self.ScreenInfo.quickmenu
+			local ratio = GPhone.Resolution
+			local size = quick.size
+			if self.b_quickopen then
+				if y >= GPhone.Height - size and y <= GPhone.Height - size + 30 * ratio then -- Close Control center
+					self.b_quickopen = nil
+					self.b_quickhold = true
+				end
+			elseif ry >= quick.y and ry <= quick.y + quick.offset then -- Open Control center
+				self.b_quickhold = true
+				self.b_quickopen = nil
+			elseif !GPhone.AppScreen.Enabled and GPhone.MoveMode then -- Moving apps
+				for k,data in pairs(GPhone.GetPage()) do
 					local posx,posy,size,appid = data.x,data.y,data.size,data.app
 					
 					if x > posx and x < posx + size and y > posy and y < posy + size then
+						local wid = size/3
+						if x < posx + wid/2 and y < posy + wid/2 then return end -- Pressed the cross, don't move it
 						if GPhone.GetApp( appid ) then
 							GPhone.MovingApp = appid
 							break
@@ -309,13 +337,13 @@ function SWEP:Think()
 			end
 		elseif ( self.b_lefthold or st ) < st - (cv and cv:GetFloat() or 0.4) and !GPhone.MoveMode and !GPhone.AppScreen.Enabled then -- Mouse hold
 			self.b_lefthold = nil
-			local home = self.ScreenInfo.home
 			
-			if rx > home.x and rx < home.x + home.size and ry > home.y and ry < home.y + home.size then -- Hold home button
+			if self.b_quickopen or self.b_quickhold then return end -- Quickmenu overrides doubleclick and others
+			if getHoverHome(self, rx, ry) then -- Hold home button
 				self.b_override = true
 				GPhone.AppScreen.Enabled = true
 				GPhone.AppScreen.Scroll = 0
-				if GPhone.CurrentApp then
+				if GPhone.CurrentApp then -- Change default window
 					local space = 0
 					for appid,_ in pairs(GPhone.Panels) do
 						if appid == GPhone.CurrentApp then
@@ -327,7 +355,7 @@ function SWEP:Think()
 					GPhone.AppThumbnail( GPhone.CurrentApp )
 					GPhone.FocusHome()
 				end
-			elseif x >= 0 and x <= GPhone.Width and y >= 0 and y <= GPhone.Height and (!GPhone.CurrentApp or GPhone.CurrentApp == "") then -- Enter MoveMode
+			elseif x >= 0 and x <= GPhone.Width and y >= 0 and y <= GPhone.Height and !GPhone.CurrentApp then -- Enter MoveMode
 				self.b_override = true
 				GPhone.MoveMode = true
 			elseif GPhone.CurrentFrame then -- Double-clicking in app
@@ -339,9 +367,26 @@ function SWEP:Think()
 			self.b_leftdown = nil
 			self.b_lefthold = nil
 			
-			if self.b_override then return end
+			if self.b_quickhold then -- Quickmenu held down
+				self.b_quickhold = nil
+				self.b_quickopen = y < GPhone.Height * 0.8
+				return
+			elseif self.b_quickopen then -- Quickmenu clicking
+				if getHoverHome(self, rx, ry) then
+					self.b_quickopen = nil
+					self.b_quickhold = nil
+				elseif y < GPhone.Height - self.ScreenInfo.quickmenu.size then
+					self.b_quickopen = nil
+					self.b_quickhold = nil
+					self.b_downtime = ct + 0.25
+				else
+					clickFrame( self.QuickMenu, x, y )
+					self.b_downtime = ct + 0.25
+				end
+				return
+			end
 			
-			local home = self.ScreenInfo.home
+			if self.b_override then return end
 			self.b_downtime = ct + 0.25
 			
 			if GPhone.GetInputText() then -- Close text input
@@ -350,7 +395,7 @@ function SWEP:Think()
 			elseif GPhone.AppScreen.Enabled then -- Inside app screen
 				local appscr = GPhone.AppScreen
 				local space,scale = 0,appscr.Scale
-				local w,h = GPhone.Width*scale,GPhone.Height*scale
+				local w,h = GPhone.Width*scale,(GPhone.Height - GPhone.Desk.Offset)*scale
 				for appid,frame in pairs(GPhone.Panels) do
 					local px,py = GPhone.Width/2 - w/2 + (w + appscr.Spacing) * (space + appscr.Scroll), GPhone.Height/2 - h/2
 					if x > px and x < px + w and y > py and y < py + h then
@@ -374,7 +419,6 @@ function SWEP:Think()
 				GPhone.FocusHome()
 			elseif GPhone.MovingApp then -- Move app on top of one another
 				local oldpos = 0
-				
 				for k,appid in pairs(GPhone.Data.apps) do
 					if appid == GPhone.MovingApp then
 						oldpos = k
@@ -383,19 +427,13 @@ function SWEP:Think()
 				end
 				
 				if oldpos > 0 then
-					for _,data in pairs(GPhone.GetPage()) do
-						local posx,posy,size,old = data.x,data.y,data.size,data.app
-						
-						if x > posx and x < posx + size and y > posy and y < posy + size then
-							for k,id in pairs(GPhone.Data.apps) do
-								if old == id then
-									local apps = GPhone.GetData("apps", {})
-									apps[k] = GPhone.MovingApp
-									apps[oldpos] = id
-									GPhone.SetData("apps", apps)
-									break
-								end
-							end
+					local old = getHoverApp(x, y)
+					for k,id in pairs(GPhone.Data.apps) do
+						if old == id then
+							local apps = GPhone.GetData("apps", {})
+							apps[k] = GPhone.MovingApp
+							apps[oldpos] = id
+							GPhone.SetData("apps", apps)
 							break
 						end
 					end
@@ -403,18 +441,26 @@ function SWEP:Think()
 				
 				GPhone.MovingApp = nil
 				self.b_downtime = 0
-			elseif GPhone.MoveMode then -- Stop editing screen
-				GPhone.MovingApp = nil
+			elseif GPhone.MoveMode then -- Remove app or stop editing
+				for k,data in pairs(GPhone.GetPage()) do
+					local posx,posy,size,appid = data.x,data.y,data.size,data.app
+					
+					local wid = size / 3
+					if x > posx - wid/2 and x < posx + wid/2 and y > posy - wid/2 and y < posy + wid/2 then
+						GPhone.UninstallApp( appid )
+						return
+					end
+				end
 				GPhone.MoveMode = nil
-			elseif rx > home.x and rx < home.x + home.size and ry > home.y and ry < home.y + home.size then -- Home button pressed
-				if GPhone.CurrentApp then -- Go to home screen
+			elseif getHoverHome(self, rx, ry) then -- Home button pressed
+				if GPhone.CurrentApp then
 					GPhone.AppThumbnail( GPhone.CurrentApp )
 				end
 				GPhone.FocusHome()
 			elseif GPhone.CurrentFrame then -- Clicking inside an app
 				clickFrame( GPhone.CurrentFrame, x, y, false )
 			else
-				clickApp( x, y )
+				clickApp( x, y ) -- Clicking on homescreen
 			end
 		end
 	end
@@ -432,6 +478,246 @@ function SWEP:Initialize()
 		
 		for k,app in pairs(GPhone.GetApps()) do
 			GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
+		end
+		
+		local ratio = GPhone.Resolution
+		
+		local hand		= 15 * ratio
+		local space		= 30 * ratio
+		local divide	= 4 * ratio
+		local music		= 44 * ratio
+		local size		= 80 * ratio
+		local slider	= 8 * ratio
+		
+		local quick = self.ScreenInfo.quickmenu
+		local offset = hand * ratio
+		
+		self.QuickMenu = GPnl.AddPanel()
+		self.QuickMenu:SetPos( 0, GPhone.Height - quick.size )
+		self.QuickMenu:SetSize( GPhone.Width, quick.size )
+		function self.QuickMenu:Paint( x, y, w, h )
+			local blur = GetConVar("gphone_blur")
+			local alpha = blur and blur:GetBool() and 80 or 150
+			draw.RoundedBox( 0, 0, 0, w, h, Color( 190, 190, 190, alpha ) )
+		end
+		
+		local handle = GPnl.AddPanel( self.QuickMenu )
+		handle:SetPos( GPhone.Width/2 - 30 * ratio, offset )
+		handle:SetSize( 60 * ratio, hand )
+		function handle:Paint( x, y, w, h )
+			draw.RoundedBox(h/2, 0, 0, w, h, Color(60, 60, 60))
+		end
+		
+		local offset = offset + hand * 2
+		
+		local divider = GPnl.AddPanel( self.QuickMenu )
+		divider:SetPos( 0, offset )
+		divider:SetSize( GPhone.Width, divide )
+		function divider:Paint( x, y, w, h )
+			surface.SetDrawColor(50, 50, 50, 200)
+			surface.DrawRect(0, 0, w, h)
+		end
+		
+		local offset = offset + divide + space
+		
+		local dull = GPnl.AddPanel( self.QuickMenu )
+		dull:SetPos( GPhone.Width * 0.05, offset + slider/2 - music/2 )
+		dull:SetSize( music, music )
+		function dull:Paint( x, y, w, h )
+			local size = w * 0.7
+			local pad = w * 0.15
+			surface.SetDrawColor(70, 70, 70)
+			surface.SetTexture( surface.GetTextureID("gphone/brightness") )
+			surface.DrawTexturedRect( pad, pad, size, size )
+		end
+		function dull:OnClick()
+			RunConsoleCommand("gphone_brightness", 0)
+		end
+		
+		local brightness = GPnl.AddPanel( self.QuickMenu )
+		brightness:SetPos( GPhone.Width * 0.15, offset )
+		brightness:SetSize( GPhone.Width * 0.7, slider )
+		function brightness:Paint( x, y, w, h )
+			local brightness = GetConVar("gphone_brightness"):GetFloat()
+			draw.RoundedBox(h/2, 0, 0, w, h, Color(90, 90, 90))
+			draw.RoundedBox(h/2, 0, 0, w * brightness, h, Color(255, 255, 255))
+		end
+		function brightness:OnClick()
+			local x = GPhone.GetCursorPos()
+			local w = self:GetSize()
+			local px = self:GetPos()
+			if x >= px and x <= px + w then
+				local p = math.Round((x - px) / w, 2)
+				RunConsoleCommand("gphone_brightness", p)
+			end
+		end
+		
+		local bright = GPnl.AddPanel( self.QuickMenu )
+		bright:SetPos( GPhone.Width * 0.95 - music, offset + slider/2 - music/2 )
+		bright:SetSize( music, music )
+		function bright:Paint( x, y, w, h )
+			surface.SetDrawColor(70, 70, 70)
+			surface.SetTexture( surface.GetTextureID("gphone/brightness") )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		function bright:OnClick()
+			RunConsoleCommand("gphone_brightness", 1)
+		end
+		
+		local offset = offset + divide + space
+		
+		local divider2 = GPnl.AddPanel( self.QuickMenu )
+		divider2:SetPos( 0, offset )
+		divider2:SetSize( GPhone.Width, divide )
+		function divider2:Paint( x, y, w, h )
+			surface.SetDrawColor(50, 50, 50, 200)
+			surface.DrawRect(0, 0, w, h)
+		end
+		
+		local offset = offset + divide + space
+		
+		local title = GPnl.AddPanel( self.QuickMenu )
+		title:SetPos( 0, offset )
+		title:SetSize( GPhone.Width, 42 * ratio )
+		function title:Paint( x, y, w, h )
+			local stream = GPhone.GetMusic()
+			if stream and stream.URL then
+				surface.SetFont("GPTitle")
+				local size = surface.GetTextSize(stream.URL)
+				draw.SimpleText(stream.URL, "GPTitle", w/2 + (size/2 - w/2 + 4 * ratio) * math.sin(RealTime()), h/2, Color(60,60,60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+		end
+		
+		local offset = offset + 42 * ratio + space
+		
+		local play = GPnl.AddPanel( self.QuickMenu )
+		play:SetPos( GPhone.Width/2 - music/2, offset )
+		play:SetSize( music, music )
+		function play:Paint( x, y, w, h )
+			local music = GPhone.GetMusic()
+			if music and music.Playing then
+				surface.SetDrawColor(255, 255, 255)
+				surface.SetTexture( surface.GetTextureID( "gphone/pause" ) )
+				surface.DrawTexturedRect( 0, 0, w, h )
+			else
+				if music then
+					surface.SetDrawColor(255, 255, 255)
+				else
+					surface.SetDrawColor(90, 90, 90)
+				end
+				surface.SetTexture( surface.GetTextureID( "gphone/play" ) )
+				surface.DrawTexturedRect( 0, 0, w, h )
+			end
+		end
+		function play:OnClick()
+			GPhone.ToggleMusic()
+		end
+		
+		local stop = GPnl.AddPanel( self.QuickMenu )
+		stop:SetPos( GPhone.Width*0.3 - music/2, offset )
+		stop:SetSize( music, music )
+		function stop:Paint( x, y, w, h )
+			local music = GPhone.GetMusic()
+			if music then
+				surface.SetDrawColor(255, 255, 255)
+			else
+				surface.SetDrawColor(90, 90, 90)
+			end
+			surface.SetTexture( surface.GetTextureID( "gphone/stop" ) )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		function stop:OnClick()
+			GPhone.StopMusic()
+		end
+		
+		local offset = offset + space + music
+		
+		local mute = GPnl.AddPanel( self.QuickMenu )
+		mute:SetPos( GPhone.Width * 0.05, offset + slider/2 - music/2 )
+		mute:SetSize( music, music )
+		function mute:Paint( x, y, w, h )
+			surface.SetDrawColor(70, 70, 70)
+			surface.SetTexture( surface.GetTextureID("gphone/sound_mute") )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		function mute:OnClick()
+			GPhone.ChangeVolume( 0 )
+		end
+		
+		local volume = GPnl.AddPanel( self.QuickMenu )
+		volume:SetPos( GPhone.Width * 0.15, offset )
+		volume:SetSize( GPhone.Width * 0.7, slider )
+		function volume:Paint( x, y, w, h )
+			local vol = GetConVar("gphone_volume")
+			draw.RoundedBox(h/2, 0, 0, w, h, Color(90, 90, 90))
+			draw.RoundedBox(h/2, 0, 0, w * (vol and vol:GetFloat() or 1), h, Color(255, 255, 255))
+		end
+		function volume:OnClick()
+			local x = GPhone.GetCursorPos()
+			local w = self:GetSize()
+			local px = self:GetPos()
+			if x >= px and x <= px + w then
+				local p = (x - px) / w
+				GPhone.ChangeVolume( p )
+			end
+		end
+		
+		local full = GPnl.AddPanel( self.QuickMenu )
+		full:SetPos( GPhone.Width * 0.95 - music, offset + slider/2 - music/2 )
+		full:SetSize( music, music )
+		function full:Paint( x, y, w, h )
+			surface.SetDrawColor(70, 70, 70)
+			surface.SetTexture( surface.GetTextureID("gphone/sound_full") )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		function full:OnClick()
+			GPhone.ChangeVolume( 1 )
+		end
+		
+		local offset = offset + space + slider
+		
+		local divider3 = GPnl.AddPanel( self.QuickMenu )
+		divider3:SetPos( 0, offset )
+		divider3:SetSize( GPhone.Width, divide )
+		function divider3:Paint( x, y, w, h )
+			surface.SetDrawColor(50, 50, 50, 200)
+			surface.DrawRect(0, 0, w, h)
+		end
+		
+		local offset = offset + divide + space
+		
+		local wifi = GPnl.AddPanel( self.QuickMenu )
+		wifi:SetPos( GPhone.Width/2 - size/2, offset )
+		wifi:SetSize( size, size )
+		wifi.outer = 4 * ratio
+		wifi.inner = 12 * ratio
+		function wifi:Paint( x, y, w, h )
+			local col = self.b_toggled and 255 or 90
+			draw.RoundedBox(h/4, 0, 0, w, h, Color(col, col, col))
+			draw.RoundedBox(h/4, self.outer/2, self.outer/2, w - self.outer, h - self.outer, Color(190, 190, 190))
+			surface.SetDrawColor(col, col, col)
+			surface.SetTexture( surface.GetTextureID( "gphone/wifi_3" ) )
+			surface.DrawTexturedRect( self.inner/2, self.inner/2, w - self.inner, h - self.inner )
+		end
+		function wifi:OnClick()
+			self.b_toggled = !self.b_toggled
+		end
+		
+		local flash = GPnl.AddPanel( self.QuickMenu )
+		flash:SetPos( space, offset )
+		flash:SetSize( size, size )
+		flash.outer = 4 * ratio
+		flash.inner = 12 * ratio
+		function flash:Paint( x, y, w, h )
+			local col = LocalPlayer():FlashlightIsOn() and 255 or 90
+			draw.RoundedBox(h/4, 0, 0, w, h, Color(col, col, col))
+			draw.RoundedBox(h/4, self.outer/2, self.outer/2, w - self.outer, h - self.outer, Color(190, 190, 190))
+			surface.SetDrawColor(col, col, col)
+			surface.SetTexture( surface.GetTextureID( "gphone/flashlight" ) )
+			surface.DrawTexturedRect( self.inner/2, self.inner/2, w - self.inner, h - self.inner )
+		end
+		function flash:OnClick()
+			RunConsoleCommand("impulse", "100")
 		end
 	end
 end
@@ -509,8 +795,14 @@ SWEP.ScreenInfo = {
 		y = 1792,
 		size = 144
 	},
+	quickmenu = {
+		y = 1660,
+		offset = 60,
+		size = 479 * GPhone.Resolution
+	},
 	draw = function( wep, w, h, ratio )
 		local cv = GetConVar("gphone_showbounds")
+		local thumb = GetConVar("gphone_thumbnail")
 		
 		if GPhone.AppScreen and GPhone.AppScreen.Enabled then
 			hook.Run("GPhonePreRenderBackground", w, h)
@@ -529,7 +821,7 @@ SWEP.ScreenInfo = {
 			
 			local space,scale = 0,appscr.Scale
 			local offset = appscr.Offset * scale
-			local w,h = GPhone.Width*scale,GPhone.Height*scale
+			local w,h = GPhone.Width*scale,(GPhone.Height - GPhone.Desk.Offset)*scale
 			for appid,frame in pairs(GPhone.Panels) do
 				local app = GPhone.GetApp( appid )
 				if !app then continue end
@@ -537,15 +829,17 @@ SWEP.ScreenInfo = {
 				local x,y = GPhone.Width/2 - w/2 + (w + appscr.Spacing) * (space + appscr.Scroll), GPhone.Height/2 - h/2
 				space = space + 1
 				if x + w < 0 or x > GPhone.Width then continue end
-				draw.RoundedBox(0, x, y - offset, w, offset + h, Color(0, 0, 0, 200))
+				surface.SetDrawColor(0, 0, 0, 200)
+				surface.DrawRect(x, y - offset, w, offset + h)
 				
 				surface.SetDrawColor(255, 255, 255)
 				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
 				surface.DrawTexturedRect( x + w/2 - offset/2, y - offset, offset, offset )
 				
-				if file.Exists("gphone/screens/"..appid..".jpg", "DATA") then
+				local mat = GPhone.GetThumbnail( appid )
+				if thumb and thumb:GetBool() and mat then
 					surface.SetDrawColor(255, 255, 255, 255)
-					surface.SetMaterial( Material("data/gphone/screens/"..appid..".jpg") )
+					surface.SetMaterial( mat )
 					surface.DrawTexturedRect(x, y, w, h)
 				else
 					surface.DrawRect(x, y, w, h)
@@ -561,6 +855,9 @@ SWEP.ScreenInfo = {
 				surface.SetDrawColor(255, 255, 255, 255)
 				surface.SetMaterial( GPhone.GetImage( app.Icon ) )
 				surface.DrawTexturedRect(x + w/2 - size/2, y + h + appscr.Spacing, size, size)
+				
+				draw.SimpleText(app.Name, "GPAppName", x + w/2 + 2, y + h + appscr.Spacing + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+				draw.SimpleText(app.Name, "GPAppName", x + w/2, y + h + appscr.Spacing + size, Color(255,255,255), TEXT_ALIGN_CENTER)
 			end
 		elseif GPhone.CurrentFrame then
 			local frame = GPhone.CurrentFrame
@@ -627,6 +924,8 @@ SWEP.ScreenInfo = {
 				end
 			end
 			drawChildren( frame )
+			
+			render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, oldw, oldh)
 		else
 			hook.Run("GPhonePreRenderBackground", w, h)
 			
@@ -642,18 +941,35 @@ SWEP.ScreenInfo = {
 				
 				if GPhone.MoveMode then
 					if GPhone.MovingApp != appid then
-						local ran = math.Rand(-4,4)
+						local ran = math.Rand(-3,3)
+						local x,y = posx - ran/3,posy - ran/3
 						
 						surface.SetDrawColor(255, 255, 255, 255)
 						surface.SetMaterial( GPhone.GetImage( app.Icon ) )
 						surface.DrawTexturedRectRotated(posx + size/2, posy + size/2, size, size, ran)
 						
-						draw.SimpleText(app.Name, "GPAppName", posx + size/2 - ran/4 + 2, posy + size - ran/4 + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
-						draw.SimpleText(app.Name, "GPAppName", posx + size/2 - ran/4, posy + size - ran/4, Color(255,255,255), TEXT_ALIGN_CENTER)
+						draw.SimpleText(app.Name, "GPAppName", x + size/2 + 2, y + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+						draw.SimpleText(app.Name, "GPAppName", x + size/2, y + size, Color(255,255,255), TEXT_ALIGN_CENTER)
 						
 						if cv and cv:GetBool() then
 							surface.SetDrawColor( Color( 255, 0, 0, 255 ) )
 							surface.DrawOutlinedRect( posx, posy, size, size )
+						end
+						
+						if !table.HasValue(GPDefaultApps, appid) then
+							local rwid = size / 3
+							local xwid = rwid * 0.6
+							
+							draw.RoundedBox(rwid/2, x - rwid/2, y - rwid/2, rwid, rwid, Color(190, 190, 190))
+							
+							surface.SetDrawColor(0, 0, 0)
+							surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
+							surface.DrawTexturedRect( x - xwid/2, y - xwid/2, xwid, xwid )
+							
+							if cv and cv:GetBool() then
+								surface.SetDrawColor( Color( 255, 0, 0, 255 ) )
+								surface.DrawOutlinedRect( posx - rwid/2, posy - rwid/2, rwid, rwid )
+							end
 						end
 					end
 				else
@@ -684,11 +1000,57 @@ SWEP.ScreenInfo = {
 				end
 			end
 		end
+		
+		if wep.b_quickhold or wep.b_quickopen then
+			local frame = wep.QuickMenu
+			if frame then
+				local oldw,oldh = ScrW(),ScrH()
+				local height = frame.h
+				local max = GPhone.Height - height
+				local offset = max
+				if wep.b_quickhold then
+					local _,y = GPhone.GetCursorPos()
+					offset = math.max(max, y)
+				end
+				
+				local blur = GetConVar("gphone_blur")
+				if blur and blur:GetBool() and offset < GPhone.Height then
+					local p = 1-math.Clamp((offset - GPhone.Height + height)/height, 0, 1)
+					render.BlurRenderTarget( render.GetRenderTarget(), p*8, p*4, math.Round(p*8) )
+				end
+				
+				local function drawChildren( pnl )
+					if pnl.children then
+						for _,child in pairs(pnl.children) do
+							if child.Paint then
+								render.SetViewPort(GPhone.Width*0.016 + child.x, GPhone.Height*0.016 + offset + child.y, oldw, oldh)
+								GPhone.DebugFunction( child.Paint, child, child.x, offset + child.y, child.w, child.h )
+								
+								if cv and cv:GetBool() then
+									surface.SetDrawColor( Color( 255, 0, 0, 255 ) )
+									surface.DrawOutlinedRect( 0, 0, child.w, child.h )
+								end
+							end
+							
+							drawChildren( child )
+						end
+					end
+				end
+				
+				if frame.Paint then
+					render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016 + offset, oldw, oldh)
+					GPhone.DebugFunction( frame.Paint, frame, frame.x, frame.y, frame.w, frame.h )
+				end
+				drawChildren( frame )
+				
+				render.SetViewPort(GPhone.Width*0.016, GPhone.Height*0.016, oldw, oldh)
+			end
+		end
 	end
 }
 
 function SWEP:ViewModelDrawn()
-	local cv = GetConVar("gphone_blur")
+	local cv = GetConVar("gphone_bgblur")
 	if cv and cv:GetBool() then
 		local st = SysTime()
 		if GPhone.CursorEnabled or self.ToggleDelay > st then
@@ -813,9 +1175,11 @@ function SWEP:ViewModelDrawn()
 		if dbg and dbg:GetBool() then
 			surface.SetDrawColor( Color(250,250,250,100) )
 			surface.DrawRect( self.ScreenInfo.home.x, self.ScreenInfo.home.y, self.ScreenInfo.home.size, self.ScreenInfo.home.size )
+			
+			local quick = self.ScreenInfo.quickmenu
+			surface.SetDrawColor( Color(250,250,250,100) )
+			surface.DrawRect( 0, quick.y, 1120, quick.offset )
 		end
-		
-		-- draw.RoundedBox(0, self.ScreenInfo.home.x, self.ScreenInfo.home.y, self.ScreenInfo.home.size, self.ScreenInfo.home.size, Color(250,250,250,100)) -- For drawing the HOME-button. Debugging
 		
 		if !GPhone.MovingApp then
 			local col = LocalPlayer():GetWeaponColor()
@@ -1152,7 +1516,7 @@ function SWEP:PostDrawViewModel( vm )
 	local cv = GetConVar("gphone_hands")
 	if !cv or !cv:GetBool() then
 		local hands = self.Owner:GetHands()
-		if IsValid( hands ) then hands:DrawModel() end
+		if IsValid(hands) then hands:DrawModel() end
 	else
 		if !IsValid(self.HandModel) then
 			local mdl = ClientsideModel("models/weapons/c_arms_citizen.mdl", RENDERGROUP_OPAQUE)

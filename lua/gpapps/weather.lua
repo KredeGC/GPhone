@@ -1,11 +1,22 @@
-APP.Name = "StormFox"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/weather.png"
+APP.Name	= "StormFox"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/weather.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
 	if !StormFox then
+		local header = GPnl.AddPanel( frame )
+		header:SetPos( 0, 0 )
+		header:SetSize( w, 64 * ratio )
+		function header:Paint( x, y, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+			
+			draw.SimpleText("StormFox not found", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		
 		local install = GPnl.AddPanel( frame )
 		install:SetPos( 32 * ratio, h/2 - 64 * ratio )
 		install:SetSize( w - 64 * ratio, 128 * ratio )

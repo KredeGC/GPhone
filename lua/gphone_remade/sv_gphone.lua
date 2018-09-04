@@ -36,13 +36,10 @@ addResources("sound/gphone")
 
 
 local function resetGPhoneData( ply, id )
-	local tbl = {
-		apps = table.Copy(GPDefaultApps or {"appstore", "settings"}),
-		background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
-	}
-	file.Write("gphone/users/"..id..".txt", util.TableToJSON(tbl))
+	local data = table.Copy(GPDefaultData)
+	file.Write("gphone/users/"..id..".txt", util.TableToJSON(data))
 	net.Start( "GPhone_Load_Client" )
-		net.WriteTable( tbl )
+		net.WriteTable( data )
 	net.Send( ply )
 end
 
@@ -53,9 +50,22 @@ hook.Add("PlayerAuthed", "GPhoneLoadClientData", function(ply, stid)
 			net.WriteTable( {} )
 		net.Send( ply )
 	elseif file.Exists("gphone/users/"..id..".txt", "DATA") then
-		local str = file.Read("gphone/users/"..id..".txt", "DATA")
+		local tbl = util.JSONToTable( file.Read("gphone/users/"..id..".txt", "DATA") )
+		local apps = {}
+		for _,id in pairs(GPDefaultApps) do -- Fix default apps
+			if !table.HasValue(tbl.apps, id) then
+				table.insert(apps, id)
+			end
+		end
+		
+		if #apps > 0 then
+			table.Add(tbl.apps, apps)
+			file.Write("gphone/users/"..id..".txt", util.TableToJSON(tbl))
+			print("[GPhone] Added "..#apps.." missing default apps for "..ply:Nick())
+		end
+		
 		net.Start( "GPhone_Load_Client" )
-			net.WriteTable( util.JSONToTable(str) )
+			net.WriteTable( tbl )
 		net.Send( ply )
 	else
 		resetGPhoneData( ply, id )

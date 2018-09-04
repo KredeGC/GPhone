@@ -1,6 +1,7 @@
-APP.Name = "Notes"
-APP.Negative = true
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/notes.png"
+APP.Name		= "Notes"
+APP.Author		= "Krede"
+APP.Negative	= true
+APP.Icon		= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/notes.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 247, 244, 180, 255 ) )
@@ -9,7 +10,7 @@ function APP.Run( frame, w, h, ratio )
 	function frame.Open( ind )
 		frame:Clear()
 		
-		local notes = GPhone.GetData("notes") or {}
+		local notes = GPhone.GetAppData("notes") or {}
 		local num = ind or table.Count(notes) + 1
 		local data = notes[ind] or {}
 		
@@ -21,12 +22,12 @@ function APP.Run( frame, w, h, ratio )
 			text.b_typing = true
 			local function onEnter( val )
 				text.b_typing = false
-				local notes = GPhone.GetData("notes") or {}
+				local notes = GPhone.GetAppData("notes") or {}
 				local note = notes[num] or {title = "", text = ""}
 				note.text = val
 				text.text = val
 				notes[num] = note
-				GPhone.SetData("notes", notes)
+				GPhone.SetAppData("notes", notes)
 			end
 			function onCancel()
 				text.b_typing = false
@@ -49,12 +50,12 @@ function APP.Run( frame, w, h, ratio )
 			header.b_typing = true
 			local function onEnter( val )
 				header.b_typing = false
-				local notes = GPhone.GetData("notes") or {}
+				local notes = GPhone.GetAppData("notes") or {}
 				local note = notes[num] or {title = "", text = ""}
 				note.title = val
 				header.title = val
 				notes[num] = note
-				GPhone.SetData("notes", notes)
+				GPhone.SetAppData("notes", notes)
 			end
 			function onCancel()
 				header.b_typing = false
@@ -90,7 +91,7 @@ function APP.Run( frame, w, h, ratio )
 		scroll:SetPos( 0, 64 * ratio )
 		scroll:SetSize( w, h - 64 * ratio )
 		
-		local notes = GPhone.GetData("notes")
+		local notes = GPhone.GetAppData("notes")
 		if notes then
 			for num,data in pairs(notes) do
 				local note = GPnl.AddPanel( scroll )
@@ -118,9 +119,9 @@ function APP.Run( frame, w, h, ratio )
 				delete:SetPos( w - 40 * ratio, 0 )
 				delete:SetSize( 40 * ratio, 40 * ratio )
 				function delete:OnClick()
-					local notes = GPhone.GetData("notes")
+					local notes = GPhone.GetAppData("notes")
 					table.remove(notes, delete:GetParent().num)
-					GPhone.SetData("notes", notes)
+					GPhone.SetAppData("notes", notes)
 					frame.Main()
 				end
 				function delete:Paint( x, y, w, h )

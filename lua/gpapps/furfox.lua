@@ -1,5 +1,6 @@
-APP.Name = "Fur Fox"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/firefox.png"
+APP.Name	= "Fur Fox"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/firefox.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
@@ -8,7 +9,7 @@ function APP.Run( frame, w, h, ratio )
 	local content = GPnl.AddPanel( frame, "html" )
 	content:SetPos( 0, 64 * ratio )
 	content:SetSize( w, h - 128 * ratio )
-	content:Init()
+	content:Init( "https://www.google.com" )
 	
 	function frame:OpenURL( url )
 		local html = content:GetHTML()

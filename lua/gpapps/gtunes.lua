@@ -1,6 +1,7 @@
-APP.Name = "GTunes"
-APP.Negative = true
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/music.png"
+APP.Name		= "GTunes"
+APP.Author		= "Krede"
+APP.Negative	= true
+APP.Icon		= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/music.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 50, 50, 50, 255 ) )
@@ -10,38 +11,43 @@ function APP.Run( frame, w, h, ratio )
 	frame.Scroll:SetPos( 0, 64 * ratio )
 	frame.Scroll:SetSize( w, h - (64 + 140) * ratio )
 	
-	function frame.ResetMusic()
+	function frame:Open( path )
+		GPhone.MusicURL = path
+		GPhone.StartMusic( path )
+	end
+	
+	function frame:ResetMusic()
 		frame.Scroll:Clear()
-		local music = GPhone.GetData("music", {})
+		local music = GPhone.GetAppData("music", {})
 		for num,url in pairs(music) do
-			local song = GPnl.AddPanel( frame.Scroll )
+			local song = GPnl.AddPanel( self.Scroll )
 			song:SetSize( w, 42 * ratio )
 			song:SetPos( 0, (num*42 - 36) * ratio )
 			song.url = url
 			function song:Paint( x, y, w, h )
-				if GPhone.MusicURL == song.url then
+				if GPhone.MusicURL == self.url or GPhone.MusicURL == "sound/"..self.url then
 					draw.RoundedBox( 0, 0, 0, w, h-2, Color( 100, 100, 200, 255 ) )
 				else
 					draw.RoundedBox( 0, 0, 0, w, h-2, Color( 60, 60, 150, 255 ) )
 				end
 				draw.RoundedBox( 0, 0, h-2, w, 2, Color( 25, 25, 100, 255 ) )
 				
-				if !song.url then return end
+				if !self.url then return end
 				surface.SetFont("GPMedium")
-				local s = surface.GetTextSize(song.url)
+				local s = surface.GetTextSize(self.url)
 				if s > w + h then
-					draw.SimpleText(song.url, "GPMedium", w - h, h/2, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+					draw.SimpleText(self.url, "GPMedium", w - h, h/2, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 				else
-					draw.SimpleText(song.url, "GPMedium", 4, h/2, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+					draw.SimpleText(self.url, "GPMedium", 4, h/2, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 				end
 			end
 			function song:OnClick( held )
 				if held then
-					local _,y = GPhone.RootToLocal( song, GPhone.GetCursorPos() )
-					frame.b_move = song
+					local _,y = GPhone.RootToLocal( self, GPhone.GetCursorPos() )
+					frame.b_move = self
 					frame.b_rel = y
 				else
-					GPhone.MusicURL = song.url
+					GPhone.MusicURL = self.url
 				end
 			end
 			
@@ -51,12 +57,12 @@ function APP.Run( frame, w, h, ratio )
 			delete:SetPos( w - size, 0 )
 			delete:SetSize( size, size )
 			function delete:OnClick()
-				local music = GPhone.GetData("music")
+				local music = GPhone.GetAppData("music")
 				if table.HasValue(music, delete:GetParent().url) then
 					table.RemoveByValue(music, delete:GetParent().url)
 				end
-				GPhone.SetData("music", music)
-				frame.ResetMusic()
+				GPhone.SetAppData("music", music)
+				frame:ResetMusic()
 			end
 			function delete:Paint( x,y,w,h )
 				surface.SetDrawColor(255, 255, 255)
@@ -66,7 +72,7 @@ function APP.Run( frame, w, h, ratio )
 		end
 	end
 	
-	frame.ResetMusic()
+	frame:ResetMusic()
 	
 	local footer = GPnl.AddPanel( frame )
 	footer:SetPos( 0, h - 140 * ratio )
@@ -177,10 +183,10 @@ function APP.Run( frame, w, h, ratio )
 	rep:SetPos( 0, 0 )
 	rep:SetSize( 64 * ratio, 64 * ratio )
 	function rep:OnClick()
-		frame.Repeat = !(frame.Repeat or false)
+		GPhone.SetAppData("repeat", !GPhone.GetAppData("repeat", false))
 	end
 	function rep:Paint( x, y, w, h )
-		if frame.Repeat then
+		if GPhone.GetAppData("repeat", false) then
 			surface.SetDrawColor(0, 255, 0)
 		else
 			surface.SetDrawColor(255, 255, 255)
@@ -195,30 +201,24 @@ function APP.Run( frame, w, h, ratio )
 	function add:OnClick()
 		local function onEnter( val )
 			GPhone.MusicURL = val
-			local music = GPhone.GetData("music") or {}
+			local music = GPhone.GetAppData("music") or {}
 			if !table.HasValue(music, val) then
 				table.insert(music, val)
-				GPhone.SetData("music", music)
+				GPhone.SetAppData("music", music)
 			end
-			frame.ResetMusic()
+			frame:ResetMusic()
 			GPhone.StartMusic( GPhone.MusicURL )
 		end
 		GPhone.InputText( onEnter )
 	end
 	function add:Paint( x, y, w, h )
-		draw.SimpleText("+", "GPTitle", w/2, h/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.SetTexture( surface.GetTextureID( "gphone/write" ) )
+		surface.DrawTexturedRect( 8, 8, w-16, h-16 )
 	end
 end
 
 function APP.Think( frame, w, h, ratio )
-	local music = GPhone.GetMusic()
-	if frame.Repeat and music then
-		local channel = music.Channel
-		if channel:GetTime() >= music.Length then
-			channel:Play()
-		end
-	end
-	
 	if frame.b_move then
 		local _,my = GPhone.RootToLocal( frame.b_move, GPhone.GetCursorPos() )
 		local _,cy = frame.b_move:GetPos()
@@ -226,7 +226,7 @@ function APP.Think( frame, w, h, ratio )
 		frame.b_move:SetPos( 0, y )
 		
 		if !input.IsMouseDown( MOUSE_LEFT ) then
-			local music	= GPhone.GetData("music", {})
+			local music	= GPhone.GetAppData("music", {})
 			local pos	= 0
 			local last	= 1
 			local children = frame.Scroll:GetChildren()
@@ -242,10 +242,10 @@ function APP.Think( frame, w, h, ratio )
 				local song = music[pos]
 				table.remove(music, pos)
 				table.insert(music, last, song)
-				GPhone.SetData("music", music)
+				GPhone.SetAppData("music", music)
 			end
 			
-			frame.ResetMusic()
+			frame:ResetMusic()
 			
 			frame.b_move = nil
 			frame.b_rel = nil
@@ -253,26 +253,12 @@ function APP.Think( frame, w, h, ratio )
 	end
 end
 
-hook.Add("GPhonePreRenderTopbar", "GTunesVisualizer", function(w, h)
+hook.Add("Think", "GTunesRepeat", function()
 	local music = GPhone.GetMusic()
-	if music then
-		local fft = {}
-		local mid = math.Round(w / 2)
-		local frag = 2
-		
-		music.Channel:FFT( fft, FFT_256 )
-		
-		for k = 1, mid, frag do
-			local v = fft[math.ceil((k/mid) * #fft)]
-			if !v then continue end
-			local val = math.Clamp(math.Round(v * h ^ 2), 0, h)
-			if val == 0 then continue end
-			local col = HSVToColor(360 * (k/mid), 1, 1)
-			surface.SetDrawColor(col.r, col.g, col.b, 255)
-			surface.DrawRect(mid + (k-1), 0, frag, val)
-			
-			surface.SetDrawColor(col.r, col.g, col.b, 255)
-			surface.DrawRect(mid - (k-1), 0, frag, val)
+	if GPhone.GetAppData("repeat", false, "gtunes") and music then
+		local channel = music.Channel
+		if channel:GetTime() >= music.Length then
+			channel:Play()
 		end
 	end
 end)

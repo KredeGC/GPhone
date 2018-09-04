@@ -1,11 +1,19 @@
 CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
 CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
 
-GPDefaultApps = {"appstore", "settings", "camera", "photos"}
+GPDefaultApps = {"appstore", "settings", "camera", "photos", "gtunes"}
+GPDefaultData = {
+	apps = table.Copy(GPDefaultApps),
+	appdata = {
+		gtunes = {
+			music = {"sound/music/hl1_song25_remix3.mp3"}
+		}
+	},
+	background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
+}
 
 file.CreateDir("gphone/users")
 if CLIENT then
-	file.CreateDir("gphone/screens")
 	file.CreateDir("gphone/apps")
 end
 
@@ -24,7 +32,7 @@ local function loadApps()
 			
 			APP = {}
 			local r = file.Read("gpapps/"..v, "LUA")
-			RunString(r or "", v)
+			RunString(r, v)
 			
 			local res = GPhone.AddApp(name, APP)
 			if res then
@@ -110,12 +118,12 @@ else
 	
 	local gpvars = {
 		["gphone_wepicon"]		= "1",		-- Fancy weapon-icon
-		["gphone_blur"]			= "1",		-- Blur when focused
+		["gphone_bgblur"]		= "1",		-- Blur when focused
+		["gphone_blur"]			= "1",		-- Blur on ui elements
 		["gphone_bob"]			= "1",		-- Viewbob
 		["gphone_hands"]		= "0",		-- Override hands
 		["gphone_hints"]		= "1",		-- Enable hints
 		["gphone_lighting"]		= "1",		-- Enable dynamic lighting
-		["gphone_debug"]		= "1",		-- Enable automatic hook debugging
 		["gphone_report"]		= "1",		-- Automatic report on error
 		["gphone_ampm"]			= "0",		-- Use imperior system
 		["gphone_sf"]			= "1",		-- Enable stormfox clock
@@ -123,6 +131,7 @@ else
 		["gphone_rows"]			= "4",		-- Amount of rows per page
 		["gphone_holdtime"]		= "0.5",	-- Holdtime
 		["gphone_brightness"]	= "1",		-- Screen brightness
+		["gphone_volume"]		= "1",		-- Volume
 		["gphone_sensitivity"]	= "4",		-- Cursor sensitivity
 		["gphone_cursorsize"]	= "60",		-- Cursor size
 		["gphone_focus"]		= "0",		-- Up-in-the-face focus
@@ -168,12 +177,12 @@ else
 		
 		panel:AddControl("CheckBox", {
 			Label = "Enable background blur (May cause FPS drops)",
-			Command = "gphone_blur"
+			Command = "gphone_bgblur"
 		})
 		
 		panel:AddControl("CheckBox", {
-			Label = "Enable App thumbnails (May cause lagspikes)",
-			Command = "gphone_thumbnail"
+			Label = "Enable UI blur (May cause FPS drops)",
+			Command = "gphone_blur"
 		})
 		
 		panel:AddControl("CheckBox", {
@@ -182,8 +191,8 @@ else
 		})
 		
 		panel:AddControl("CheckBox", {
-			Label = "Enable hook conflict detection",
-			Command = "gphone_debug"
+			Label = "Enable App thumbnails",
+			Command = "gphone_thumbnail"
 		})
 		
 		panel:AddControl("CheckBox", {
@@ -234,6 +243,14 @@ else
 		panel:AddControl( "Slider", {
 			Label = "Screen brightness",
 			Command = "gphone_brightness",
+			Type = "Float",
+			Min = 0,
+			Max = 1
+		})
+		
+		panel:AddControl( "Slider", {
+			Label = "Phone volume",
+			Command = "gphone_volume",
 			Type = "Float",
 			Min = 0,
 			Max = 1

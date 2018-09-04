@@ -189,6 +189,10 @@ local paneltypes = {
 			return self.b_tabs
 		end
 		
+		function frame:GetTab( name )
+			return self.b_tabs[name] or false
+		end
+		
 		function frame:OpenTab( name, time, newanim, oldanim )
 			local pnl = self.b_tabs[name]
 			if !pnl or self.b_tab == pnl then return false end
@@ -215,12 +219,15 @@ local paneltypes = {
 		end
 	end,
 	["toggle"] = function(frame)
+		frame.b_padding = 4 * GPhone.Resolution
 		function frame:Paint( x, y, w, h )
-			draw.RoundedBox(h/2, 0, 0, w, h, Color(200, 200, 200) )
-			local col = self.b_toggled and Color(0, 255, 0) or Color(220, 220, 220)
+			local bgcol = self.b_negative and Color(80, 80, 80) or Color(200, 200, 200)
+			local btcol = self.b_negative and Color(80, 80, 80) or Color(255, 255, 255)
+			local atcol = self.b_toggled and Color(0, 255, 0) or self.b_negative and Color(150, 150, 150) or Color(220, 220, 220)
 			
-			draw.RoundedBox(h/2, 2, 2, w - 4, h - 4, col )
-			draw.RoundedBox(h/2, 4 + (w - h) * (self.b_toggled and 1 or 0), 4, h - 8, h - 8, Color(255, 255, 255) )
+			draw.RoundedBox(h/2, 0, 0, w, h, bgcol )
+			draw.RoundedBox(h/2, self.b_padding/2, self.b_padding/2, w - self.b_padding, h - self.b_padding, atcol )
+			draw.RoundedBox(h/2, self.b_padding + (w - h) * (self.b_toggled and 1 or 0), self.b_padding, h - self.b_padding*2, h - self.b_padding*2, btcol )
 		end
 		
 		function frame:SetToggle( bool )
@@ -228,6 +235,13 @@ local paneltypes = {
 		end
 		function frame:GetToggle()
 			return self.b_toggled or false
+		end
+		
+		function frame:SetNegative( bool )
+			self.b_negative = bool
+		end
+		function frame:GetNegative()
+			return self.b_negative or false
 		end
 		
 		function frame:OnClick()
@@ -243,7 +257,7 @@ local paneltypes = {
 			self.i_speed = num
 		end
 		function frame:GetScrollSpeed()
-			return (self.i_speed or 24) * GPhone.Resolution
+			return (self.i_speed or 30) * GPhone.Resolution
 		end
 		
 		function frame:OnScroll( num )
@@ -311,7 +325,8 @@ local paneltypes = {
 			if IsValid(self.d_html) then
 				GPhone.CloseHTMLPanel( self.d_html )
 			end
-			self.d_html = GPhone.CreateHTMLPanel( self:GetSize(), url )
+			local w,h = self:GetSize()
+			self.d_html = GPhone.CreateHTMLPanel( w, h, url )
 		end
 		
 		function frame:GetHTML()
@@ -340,6 +355,57 @@ local paneltypes = {
 			self.d_html:RunJavascript( [[window.scrollBy(0, ]]..val..[[);]] )
 		end
 	end,
+	["video"] = function(frame)
+		function frame:Open( path )
+			local ext = string.GetExtensionFromFilename(path)
+			if ext != "mp4" and ext != "webm" then return false end -- Only .mp4 and .webm supported
+			if !file.Exists(path, "GAME") then return false end
+			local r = file.Read(path, "GAME")
+			local data = util.Base64Encode( r )
+			
+			if IsValid(self.d_html) then
+				GPhone.CloseHTMLPanel( self.d_html )
+			end
+			local w,h = self:GetSize()
+			self.d_html = GPhone.CreateHTMLPanel( w, h )
+			
+			self.d_html:SetHTML([[<!doctype html>
+			<html>
+			<body style="overflow:hidden">
+			
+			<video id="player" width="100%" height="100%" loop autoplay>
+			  <source src="data:video/]]..ext..[[;base64,]]..data..[[" type="video/]]..ext..[[">
+			  Your browser does not support the video tag.
+			</video>
+			
+			<script type="text/javascript">
+				var vid = document.getElementById("player");
+			</script>
+			
+			</body>
+			</html>]])
+			
+			return true
+		end
+		
+		function frame:GetHTML()
+			return self.d_html
+		end
+		
+		function frame:OnRemove()
+			GPhone.CloseHTMLPanel( self:GetHTML() )
+		end
+		
+		function frame:Paint( x, y, w, h )
+			surface.SetDrawColor( 255, 255, 255 )
+			surface.SetMaterial( GPhone.ReturnHTMLMaterial( self:GetHTML() ) )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		
+		function frame:OnClick() -- TODO: Pause and play when clicked
+			
+		end
+	end
 }
 
 local panelanims = {
@@ -369,13 +435,24 @@ local panelanims = {
 	end
 }
 
+
 function GPnl.GetTypes()
 	return paneltypes
 end
 
+function GPnl.GetAnims()
+	return panelanims
+end
+
+
 function GPnl.AddType(name, func)
 	paneltypes[name] = func
 end
+
+function GPnl.AddAnimation(name, func)
+	panelanims[name] = func
+end
+
 
 function GPnl.AddPanel( parent, kind )
 	local frame = gframe( parent, kind )
@@ -404,7 +481,7 @@ function GPnl.DoAnimation( frame, time, func, stop )
 end
 
 
-hook.Add("PlayerBindPress", "PlayerScrollGPanel", function(ply, bind, pressed)
+hook.Add("PlayerBindPress", "_PlayerScrollGPanel", function(ply, bind, pressed)
 	local wep = ply:GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and GPhone.CursorEnabled and pressed then
 		if bind == "invprev" or bind == "invnext" then

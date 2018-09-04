@@ -1,16 +1,17 @@
-APP.Name = "Photos"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/photos.png"
+APP.Name	= "Photos"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/photos.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	frame.m_chosen = {}
 	
-	function frame.Open( pic, mat )
-		frame:SetFullScreen( false )
-		frame:Clear()
+	function frame:Open( pic, mat )
+		self:SetFullScreen( false )
+		self:Clear()
 		
-		local bigpic = GPnl.AddPanel( frame )
+		local bigpic = GPnl.AddPanel( self )
 		bigpic:SetPos( 0, -GPhone.Desk.Offset )
 		bigpic:SetSize( w, GPhone.Height )
 		function bigpic:Paint( x, y, w, h )
@@ -26,7 +27,7 @@ function APP.Run( frame, w, h, ratio )
 			self:SetPos( 0, -off )
 		end
 		
-		footer = GPnl.AddPanel( frame )
+		footer = GPnl.AddPanel( self )
 		footer:SetPos( 0, h - 64 * ratio )
 		footer:SetSize( w, 64 * ratio )
 		function footer:Paint( x, y, w, h )
@@ -34,7 +35,7 @@ function APP.Run( frame, w, h, ratio )
 			draw.RoundedBox( 0, 0, 2, w, h-2, Color( 255, 255, 255, 255 ) )
 		end
 		
-		header = GPnl.AddPanel( frame )
+		header = GPnl.AddPanel( self )
 		header:SetPos( 0, 0 )
 		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
@@ -59,7 +60,7 @@ function APP.Run( frame, w, h, ratio )
 				if file.Exists(pic, "DATA") then
 					file.Delete(pic)
 				end
-				frame.Main()
+				frame:Main()
 			end
 		end
 		
@@ -80,17 +81,17 @@ function APP.Run( frame, w, h, ratio )
 		back:SetPos( 0, 0 )
 		back:SetSize( 64 * ratio, 64 * ratio )
 		function back:OnClick()
-			frame.Main()
+			frame:Main()
 		end
 		function back:Paint( x, y, w, h )
 			draw.SimpleText("<", "GPTitle", w/2, h/2, Color(0, 160, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 	end
 	
-	function frame.Main()
-		frame:Clear()
+	function frame:Main()
+		self:Clear()
 		
-		local scroll = GPnl.AddPanel( frame, "scroll" )
+		local scroll = GPnl.AddPanel( self, "scroll" )
 		scroll:SetPos( 0, 64 * ratio )
 		scroll:SetSize( w, h - 128 * ratio )
 		
@@ -136,13 +137,13 @@ function APP.Run( frame, w, h, ratio )
 							table.insert(frame.m_chosen, but)
 						end
 					else
-						frame.Open( but.pic, but.mat )
+						frame:Open( but.pic, but.mat )
 					end
 				end
 			end)
 		end
 		
-		local footer = GPnl.AddPanel( frame )
+		local footer = GPnl.AddPanel( self )
 		footer:SetPos( 0, h - 64 * ratio )
 		footer:SetSize( w, 64 * ratio )
 		function footer:Paint( x, y, w, h )
@@ -150,22 +151,20 @@ function APP.Run( frame, w, h, ratio )
 			draw.RoundedBox( 0, 0, 2, w, h-2, Color( 255, 255, 255, 255 ) )
 		end
 		
-		frame.trash = GPnl.AddPanel( footer )
-		frame.trash:SetPos( footer:GetWidth() - 64 * ratio, 0 )
-		frame.trash:SetSize( 64 * ratio, 64 * ratio )
-		frame.trash:SetVisible(false)
-		function frame.trash:Paint( x, y, w, h )
+		self.trash = GPnl.AddPanel( footer )
+		self.trash:SetPos( footer:GetWidth() - 64 * ratio, 0 )
+		self.trash:SetSize( 64 * ratio, 64 * ratio )
+		self.trash:SetVisible(false)
+		function self.trash:Paint( x, y, w, h )
 			if frame and frame.m_chosen and #frame.m_chosen > 0 then
 				surface.SetDrawColor(255, 0, 0)
-				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
-				surface.DrawTexturedRect( 0, 0, w, h )
 			else
 				surface.SetDrawColor(50, 50, 50)
-				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
-				surface.DrawTexturedRect( 0, 0, w, h )
 			end
+			surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
+			surface.DrawTexturedRect( 0, 0, w, h )
 		end
-		function frame.trash:OnClick()
+		function self.trash:OnClick()
 			if frame and frame.m_chosen and #frame.m_chosen > 0 then
 				for k,but in pairs(frame.m_chosen) do
 					if file.Exists(but.pic, "DATA") then
@@ -176,11 +175,11 @@ function APP.Run( frame, w, h, ratio )
 				frame.m_choose = false
 				frame.m_chosen = {}
 				self:SetVisible(false)
-				frame.Main()
+				frame:Main()
 			end
 		end
 		
-		local header = GPnl.AddPanel( frame )
+		local header = GPnl.AddPanel( self )
 		header:SetPos( 0, 0 )
 		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
@@ -213,5 +212,5 @@ function APP.Run( frame, w, h, ratio )
 		end
 	end
 	
-	frame.Main()
+	frame:Main()
 end

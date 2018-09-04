@@ -1,10 +1,11 @@
-APP.Name = "Garry Clicker"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/gmail.png"
+APP.Name	= "Garry Clicker"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/gmail.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 200, 200, 255 ) )
 		
-		draw.SimpleText(GPhone.GetData("cookies", 0).." Cookies", "GPTitle", w/2, 42, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(GPhone.GetAppData("cookies", 0).." Cookies", "GPTitle", w/2, 42, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	
 	local button = GPnl.AddPanel( frame )
@@ -19,7 +20,7 @@ function APP.Run( frame, w, h, ratio )
 	end
 	function button:OnClick()
 		self.b_lerp = CurTime() + 0.25
-		local cookies = GPhone.GetData("cookies", 0)
-		GPhone.SetData("cookies", cookies + 1)
+		local cookies = GPhone.GetAppData("cookies", 0)
+		GPhone.SetAppData("cookies", cookies + 1)
 	end
 end

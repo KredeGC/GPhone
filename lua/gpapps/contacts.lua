@@ -1,5 +1,6 @@
--- APP.Name = "Contacts"
-APP.Icon = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/contacts.png"
+-- APP.Name	= "Contacts"
+APP.Author	= "Krede"
+APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/contacts.png"
 function APP.Run( frame, w, h )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
