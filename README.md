@@ -1,3 +1,5 @@
+![gphone](http://gphone.pe.hu/api/count)
+
 # GPhone
 "Are you tired of having to equip your camera every time you want to take a picture?
 Would you rather have an App for it?
