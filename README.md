@@ -1,4 +1,4 @@
-[![gphone](http://gphone.pe.hu/api/count)](http://gphone.pe.hu)
+[![gphone](http://gphone.icu//api/count)](http://gphone.icu)
 
 # GPhone
 "Are you tired of having to equip your camera every time you want to take a picture?
@@ -13,7 +13,8 @@ Batteries not included."
 
 ## Links
 * [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=1370983401)
-* [Website](http://gphone.pe.hu)
+* [Website](http://gphone.icu)
+* [App Uploader](http://gphone.icu/appcreator)
 * [App Creation](https://github.com/KredeGC/GPhone/wiki)
 
 
