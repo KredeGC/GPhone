@@ -12,6 +12,7 @@ function APP.Run( frame, w, h, ratio )
 	scroll:SetSize( w, h - 64 * ratio )
 	
 	local space = 12 * ratio
+	local mar = (64 - 36) * ratio
 	
 	local enable = GPnl.AddPanel( scroll, "panel" )
 	enable:SetSize( w, 64 * ratio )
@@ -20,7 +21,7 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 60, 60, 150, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 25, 25, 100, 255 ) )
 		
-		draw.SimpleText("Enable Visualizer", "GPMedium", (64-36) * ratio, h/2, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Enable Visualizer", "GPMedium", mar, h/2, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 	
 	local pad = 8 * ratio
@@ -34,7 +35,29 @@ function APP.Run( frame, w, h, ratio )
 		GPhone.SetAppData("enable", bool)
 	end
 	
-	local space = space + 64 * ratio
+	space = space + 64 * ratio
+	
+	local size = GPnl.AddPanel( scroll, "textentry" )
+	size:SetSize( w, 64 * ratio )
+	size:SetPos( 0, space )
+	size:SetText( GPhone.GetAppData("size", 4) )
+	function size:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 60, 60, 150, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 25, 25, 100, 255 ) )
+		
+		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
+		draw.SimpleText("Size: "..text, self:GetFont(), mar, h/2, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+	function size:OnEnter( val )
+		local val = tonumber(val)
+		if val then
+			local num = math.Clamp(val, 1, 20)
+			self:SetText( num )
+			GPhone.SetAppData("size", num)
+		end
+	end
+	
+	space = space + 64 * ratio
 	
 	local header = GPnl.AddPanel( frame )
 	header:SetPos( 0, 0 )
@@ -53,7 +76,7 @@ hook.Add("GPhonePreRenderTopbar", "GTunesVisualizer", function(w, h)
 	if music then
 		local fft = {}
 		local mid = math.Round(w / 2)
-		local frag = 2
+		local frag = GPhone.GetAppData("size", 4, "visualizer")
 		
 		music.Channel:FFT( fft, FFT_256 )
 		

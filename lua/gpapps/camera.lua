@@ -4,8 +4,11 @@ APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camer
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h
+	local ls = GPhone.Landscape
+	local size = 100 * ratio
 	frame.front = GPhone.SelfieEnabled()
 	frame.fov = 80
+	frame.pad = 110 * ratio
 	
 	function frame:OnScroll( num )
 		self.fov = math.Clamp(self.fov - num*5, 5, 100)
@@ -17,40 +20,29 @@ function APP.Run( frame, w, h, ratio )
 		surface.SetMaterial( mat )
 		surface.DrawTexturedRect(0, 0, w, h)
 		
-		draw.RoundedBox(0, 0, h - 100 * ratio, w, 100 * ratio, Color(0, 0, 0, 150))
+		if GPhone.Landscape then
+			draw.SimpleText(self.fov, "GPMedium", w - self.pad, h/2, Color(255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+		else
+			draw.SimpleText(self.fov, "GPMedium", w/2, h - self.pad, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+		end
 	end
 	
-	local face = GPnl.AddPanel( frame )
-	face:SetSize( 160 * ratio, 80 * ratio )
-	face:SetPos( w - 160 * ratio, 0 )
-	face:SetVisible( false )
-	function face:Paint( x, y, w, h )
-		surface.SetDrawColor(255, 255, 255)
-		surface.SetTexture( surface.GetTextureID( "vgui/face/grin" ) )
-		surface.DrawTexturedRect( 0, 0, w, h )
+	local panel = GPnl.AddPanel( frame )
+	if ls then
+		panel:SetSize( size, w )
+		panel:SetPos( w - size, 0 )
+	else
+		panel:SetSize( w, size )
+		panel:SetPos( 0, h - size )
 	end
-	function face:OnClick()
-		frame.smile = !frame.smile
-	end
-	
-	local switch = GPnl.AddPanel( frame )
-	switch:SetSize( 80 * ratio, 80 * ratio )
-	switch:SetPos( 0, 0 )
-	function switch:Paint( x, y, w, h )
-		surface.SetDrawColor(255, 255, 255)
-		surface.SetTexture( surface.GetTextureID( "gui/html/refresh" ) )
-		surface.DrawTexturedRect( 0, 0, w, h )
-	end
-	function switch:OnClick()
-		local bool = !frame.front
-		frame.front = bool
-		face:SetVisible( bool )
-		GPhone.EnableSelfie( bool )
+	function panel:Paint( x, y, w, h )
+		surface.SetDrawColor( Color(0, 0, 0, 150) )
+		surface.DrawRect(0, 0, w, h)
 	end
 	
-	local photo = GPnl.AddPanel( frame )
-	photo:SetSize( 80 * ratio, 80 * ratio )
-	photo:SetPos( w-90 * ratio, h-90 * ratio )
+	local photo = GPnl.AddPanel( panel )
+	photo:SetSize( size * 0.8, size * 0.8 )
+	photo:SetPos( (ls and 0 or w - size) + size * 0.1, size * 0.1 )
 	function photo:Paint( x, y, w, h )
 		if self.last then
 			local s = w/GPhone.Ratio
@@ -67,9 +59,13 @@ function APP.Run( frame, w, h, ratio )
 		end
 	end
 	
-	local screenshot = GPnl.AddPanel( frame )
-	screenshot:SetSize( 100 * ratio, 100 * ratio )
-	screenshot:SetPos( w/2 - (100 * ratio)/2, h - 100 * ratio )
+	local screenshot = GPnl.AddPanel( panel )
+	screenshot:SetSize( size, size )
+	if ls then
+		screenshot:SetPos( 0, h/2 - size/2 )
+	else
+		screenshot:SetPos( w/2 - size/2, 0 )
+	end
 	function screenshot:Paint( x, y, w, h )
 		surface.SetDrawColor(255, 255, 255)
 		surface.SetTexture( surface.GetTextureID( "sgm/playercircle" ) )
@@ -96,9 +92,42 @@ function APP.Run( frame, w, h, ratio )
 			photo.last = "gphone/photos/"..name
 		end)
 	end
+	
+	local face = GPnl.AddPanel( frame )
+	face:SetSize( 160 * ratio, 80 * ratio )
+	if ls then
+		face:SetPos( 0, h - 80 * ratio )
+	else
+		face:SetPos( w - 160 * ratio, 0 )
+	end
+	face:SetVisible( false )
+	function face:Paint( x, y, w, h )
+		surface.SetDrawColor(255, 255, 255)
+		surface.SetTexture( surface.GetTextureID( "vgui/face/grin" ) )
+		surface.DrawTexturedRect( 0, 0, w, h )
+	end
+	function face:OnClick()
+		frame.smile = !frame.smile
+	end
+	
+	local switch = GPnl.AddPanel( frame )
+	switch:SetSize( 80 * ratio, 80 * ratio )
+	switch:SetPos( 0, 0 )
+	function switch:Paint( x, y, w, h )
+		surface.SetDrawColor(255, 255, 255)
+		surface.SetTexture( surface.GetTextureID( "gui/html/refresh" ) )
+		surface.DrawTexturedRect( 0, 0, w, h )
+	end
+	function switch:OnClick()
+		local bool = !frame.front
+		frame.front = bool
+		face:SetVisible( bool )
+		GPhone.EnableSelfie( bool )
+	end
 end
 
 function APP.Think( frame )
+	if !frame.front then return end
 	local p = frame.smile and 1 or 0
 	local ply = LocalPlayer()
 	local flex = ply:GetFlexNum() - 1

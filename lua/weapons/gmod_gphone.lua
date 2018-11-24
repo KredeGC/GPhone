@@ -35,25 +35,49 @@ SWEP.WorldModel				= "models/nitro/iphone4.mdl"
 SWEP.DrawCrosshair			= false
 SWEP.UseHands				= false
 
-SWEP.ViewModelBones = {
-	["ValveBiped.Bip01_R_Finger41"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 2.005, 7.734) },
-	["ValveBiped.Bip01_R_Finger31"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(4.939, 0.391, 2.486) },
+SWEP.Bones = {
 	["ValveBiped.Bip01_R_Forearm"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(12.364, -4.447, -166.75) },
 	["ValveBiped.Bip01_R_Hand"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-26.625, 46.612, 148.677) },
 	["ValveBiped.Bip01_R_Finger4"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(2.838, -8.886, 8.005) },
-	["ValveBiped.Bip01_R_Finger32"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(1.215, 3.562, -15.863) },
+	["ValveBiped.Bip01_R_Finger41"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 2.005, 7.734) },
 	["ValveBiped.Bip01_R_Finger42"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-14.054, -2.49, -14.485) },
+	["ValveBiped.Bip01_R_Finger3"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-1.554, 0.397, 12.392) },
+	["ValveBiped.Bip01_R_Finger31"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(4.939, 0.391, 2.486) },
+	["ValveBiped.Bip01_R_Finger32"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(1.215, 3.562, -15.863) },
 	["ValveBiped.Bip01_R_Finger2"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-2.967, 5.788, 0.527) },
 	["ValveBiped.Bip01_R_Finger22"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, -0.002, -6.613) },
-	["ValveBiped.Bip01_R_Finger3"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-1.554, 0.397, 12.392) },
 	["ValveBiped.Bip01_R_Finger1"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(3.894, 3.219, 0) },
+	["ValveBiped.Bip01_R_Finger11"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 0, 0) },
+	["ValveBiped.Bip01_R_Finger12"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 0, 0) },
 	["ValveBiped.Bip01_R_Finger0"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(6.468, -2.203, 54.722) },
-	["ValveBiped.Bip01_R_Finger01"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-2, 2, 0) }
+	["ValveBiped.Bip01_R_Finger01"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-2, 2, 0) },
+	["ValveBiped.Bip01_R_Finger02"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 0, 0) }
+}
+
+SWEP.LandscapeBones = {
+	["ValveBiped.Bip01_R_Forearm"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(12.364, -4.447, -166.75) },
+	["ValveBiped.Bip01_R_Hand"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-26.625, 46.612, 148.677) },
+	["ValveBiped.Bip01_R_Finger4"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-1.838, 0.886, 0) },
+	["ValveBiped.Bip01_R_Finger41"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-8, 30.005, 0) },
+	["ValveBiped.Bip01_R_Finger42"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(44.054, 100.49, 15) },
+	["ValveBiped.Bip01_R_Finger3"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-1.554, 30.397, 12.392) },
+	["ValveBiped.Bip01_R_Finger31"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(4.939, 0.391, 2.486) },
+	["ValveBiped.Bip01_R_Finger32"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(1.215, 3.562, -15.863) },
+	["ValveBiped.Bip01_R_Finger2"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-8.967, 25.788, 0.527) },
+	["ValveBiped.Bip01_R_Finger22"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, -0.002, -6.613) },
+	["ValveBiped.Bip01_R_Finger1"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-19.894, -34.219, 0) },
+	["ValveBiped.Bip01_R_Finger11"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(20, 50, 0) },
+	["ValveBiped.Bip01_R_Finger12"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(5, 60, 0) },
+	["ValveBiped.Bip01_R_Finger0"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-2.468, -3.203, 54.722) },
+	["ValveBiped.Bip01_R_Finger01"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-26, 10, 0) },
+	["ValveBiped.Bip01_R_Finger02"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(-10, 40, 40) }
 }
 
 
-SWEP.IronSightsPos = Vector(-2.28, -10.3, 2.37)
-SWEP.IronSightsAng = Vector(0, 3, 0.25)
+SWEP.SightsPos = Vector(-2.28, -10.3, 2.37)
+SWEP.LandscapeSightsPos = Vector(-0.98, -10.4, 3.11)
+SWEP.SightsAng = Vector(0, 3, 0.25)
+
 SWEP.CallSightsPos = Vector(-10.461, -12.421, 0.55)
 SWEP.CallSightsAng = Vector(0, -90, 5)
 
@@ -76,7 +100,7 @@ local function parentPos( p )
 	if p then
 		local px,py = parentPos( p.parent )
 		local x,y = p.x,p.y
-		return x+px,y+py
+		return x + px,y + py
 	else
 		return 0,0
 	end
@@ -161,13 +185,13 @@ function SWEP:Sights(pos, ang, ct, ft, iftp)
 	
 	local cv = GetConVar("gphone_focus")
 	local focus = cv and cv:GetFloat() or 0
-	local offset = self.IronSightsPos
+	local offset = GPhone.Landscape and self.LandscapeSightsPos or self.SightsPos
 	ang = ang * 1
 	
-	if self.IronSightsAng then
-		ang:RotateAroundAxis(ang:Right(), 	self.IronSightsAng.x * c_iron)
-		ang:RotateAroundAxis(ang:Up(), 		self.IronSightsAng.y * c_iron)
-		ang:RotateAroundAxis(ang:Forward(), self.IronSightsAng.z * c_iron)
+	if self.SightsAng then
+		ang:RotateAroundAxis(ang:Right(), 	self.SightsAng.x * c_iron)
+		ang:RotateAroundAxis(ang:Up(), 		self.SightsAng.y * c_iron)
+		ang:RotateAroundAxis(ang:Forward(), self.SightsAng.z * c_iron)
 	end
 	
 	pos = pos + (offset.x + focus*0.052) * ang:Right() * c_iron
@@ -186,6 +210,12 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Reload()
+	local ct = CurTime()
+	if (self.b_lastreload or 0) + 0.5 < ct then
+		self.b_lastreload = ct
+		net.Start("GPhone_Rotate")
+		net.Send(self.Owner)
+	end
 	return false
 end
 
@@ -254,7 +284,8 @@ function SWEP:Think()
 		if bone_id then
 			vm:ManipulateBoneScale(bone_id, Vector(0.01, 0.01, 0.01))
 		end
-		for bone,data in pairs(self.ViewModelBones) do
+		local bones = GPhone.Landscape and self.LandscapeBones or self.Bones
+		for bone,data in pairs(bones) do
 			local bone_id = vm:LookupBone(bone)
 			if bone_id then
 				vm:ManipulateBoneScale(bone_id, data.scale)
@@ -302,7 +333,8 @@ function SWEP:Think()
 	if GPhone.CursorEnabled and !vgui.CursorVisible() then
 		local cv = GetConVar("gphone_holdtime")
 		local rx,ry = GPhone.CursorPos.x,GPhone.CursorPos.y
-		local x,y = rx / 1120 * GPhone.Width,ry / 1660 * GPhone.Height
+		local x,y = GPhone.GetCursorPos()
+		local ls = GPhone.Landscape
 		
 		if input.IsMouseDown( MOUSE_LEFT ) and !self.b_leftdown then -- Mouse down
 			self.b_leftdown = true
@@ -313,12 +345,12 @@ function SWEP:Think()
 			local quick = self.ScreenInfo.quickmenu
 			local ratio = GPhone.Resolution
 			local size = quick.size
-			if self.b_quickopen then
+			if !ls and self.b_quickopen then
 				if y >= GPhone.Height - size and y <= GPhone.Height - size + 30 * ratio then -- Close Control center
 					self.b_quickopen = nil
 					self.b_quickhold = true
 				end
-			elseif ry >= quick.y and ry <= quick.y + quick.offset then -- Open Control center
+			elseif !ls and ry >= quick.y and ry <= quick.y + quick.offset then -- Open Control center
 				self.b_quickhold = true
 				self.b_quickopen = nil
 			elseif !GPhone.AppScreen.Enabled and GPhone.MoveMode then -- Moving apps
@@ -338,7 +370,7 @@ function SWEP:Think()
 		elseif ( self.b_lefthold or st ) < st - (cv and cv:GetFloat() or 0.4) and !GPhone.MoveMode and !GPhone.AppScreen.Enabled then -- Mouse hold
 			self.b_lefthold = nil
 			
-			if self.b_quickopen or self.b_quickhold then return end -- Quickmenu overrides doubleclick and others
+			if !ls and (self.b_quickopen or self.b_quickhold) then return end -- Quickmenu overrides doubleclick and others
 			if getHoverHome(self, rx, ry) then -- Hold home button
 				self.b_override = true
 				GPhone.AppScreen.Enabled = true
@@ -367,23 +399,25 @@ function SWEP:Think()
 			self.b_leftdown = nil
 			self.b_lefthold = nil
 			
-			if self.b_quickhold then -- Quickmenu held down
-				self.b_quickhold = nil
-				self.b_quickopen = y < GPhone.Height * 0.8
-				return
-			elseif self.b_quickopen then -- Quickmenu clicking
-				if getHoverHome(self, rx, ry) then
-					self.b_quickopen = nil
+			if !ls then
+				if self.b_quickhold then -- Quickmenu held down
 					self.b_quickhold = nil
-				elseif y < GPhone.Height - self.ScreenInfo.quickmenu.size then
-					self.b_quickopen = nil
-					self.b_quickhold = nil
-					self.b_downtime = ct + 0.25
-				else
-					clickFrame( self.QuickMenu, x, y )
-					self.b_downtime = ct + 0.25
+					self.b_quickopen = y < GPhone.Height * 0.8
+					return
+				elseif self.b_quickopen then -- Quickmenu clicking
+					if getHoverHome(self, rx, ry) then
+						self.b_quickopen = nil
+						self.b_quickhold = nil
+					elseif y < GPhone.Height - self.ScreenInfo.quickmenu.size then
+						self.b_quickopen = nil
+						self.b_quickhold = nil
+						self.b_downtime = ct + 0.25
+					else
+						clickFrame( self.QuickMenu, x, y )
+						self.b_downtime = ct + 0.25
+					end
+					return
 				end
-				return
 			end
 			
 			if self.b_override then return end
@@ -757,10 +791,6 @@ function SWEP:OnRemove()
 		end
 		
 		GPhone.CursorEnabled = false
-		
-		for k,v in pairs(file.Find("gphone/screens/*.jpg", "DATA")) do
-			file.Delete("gphone/screens/"..v)
-		end
 	end
 	
 	self:Holster()
@@ -774,20 +804,11 @@ local dotfmat = Material("gphone/dot_full")
 local blurmat = Material("pp/blurscreen")
 local screenlight = 1
 
-GPhone.PhoneRT = GetRenderTarget("GPhoneRT_"..GPhone.Height, GPhone.Width*1.032, GPhone.Height*1.032, false)
-GPhone.PhoneMT = CreateMaterial(
-	"GPhoneMT_"..GPhone.Height,
-	"UnlitGeneric",
-	{
-		["$basetexture"] = GPhone.PhoneRT,
-		["$vertexcolor"] = 1,
-		["$vertexalpha"] = 1
-	}
-)
+
 
 SWEP.ScreenInfo = {
-	pos = Vector(2.625, 2, -3.592),
-	ang = Angle(0, -180.477, -92.2),
+	pos = Vector(0.3, 1.125, 1.68),
+	ang = Angle(0, 90, 90),
 	size = 0.002,
 	bone = "ValveBiped.Bip01_MobilePhone",
 	home = {
@@ -807,10 +828,18 @@ SWEP.ScreenInfo = {
 		if GPhone.AppScreen and GPhone.AppScreen.Enabled then
 			hook.Run("GPhonePreRenderBackground", w, h)
 			
-			local appscr = GPhone.AppScreen
+			local mat = GPhone.GetImage( GPhone.Data.background )
+			local rw,rh = mat:GetFloat("$realwidth") or 56, mat:GetFloat("$realheight") or 83
+			local rt = rw / rh
 			surface.SetDrawColor(255, 255, 255, 255)
-			surface.SetMaterial( GPhone.GetImage( GPhone.Data.background ) )
-			surface.DrawTexturedRect(0, 0, GPhone.Width, GPhone.Height)
+			surface.SetMaterial( mat )
+			if GPhone.Landscape then
+				local s = w / rt
+				surface.DrawTexturedRect(0, h/2 - s/2, w, s)
+			else
+				local s = h * rt
+				surface.DrawTexturedRect(w/2 - s/2, 0, s, h)
+			end
 			
 			local blur = GetConVar("gphone_blur")
 			if blur and blur:GetBool() then
@@ -819,6 +848,7 @@ SWEP.ScreenInfo = {
 			
 			hook.Run("GPhonePostRenderBackground", w, h)
 			
+			local appscr = GPhone.AppScreen
 			local space,scale = 0,appscr.Scale
 			local offset = appscr.Offset * scale
 			local w,h = GPhone.Width*scale,(GPhone.Height - GPhone.Desk.Offset)*scale
@@ -851,13 +881,13 @@ SWEP.ScreenInfo = {
 					surface.DrawOutlinedRect( x, y - offset, w, offset )
 				end
 				
-				local size = 64*ratio
+				local size = 64 * ratio
 				surface.SetDrawColor(255, 255, 255, 255)
 				surface.SetMaterial( GPhone.GetImage( app.Icon ) )
 				surface.DrawTexturedRect(x + w/2 - size/2, y + h + appscr.Spacing, size, size)
 				
-				draw.SimpleText(app.Name, "GPAppName", x + w/2 + 2, y + h + appscr.Spacing + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
-				draw.SimpleText(app.Name, "GPAppName", x + w/2, y + h + appscr.Spacing + size, Color(255,255,255), TEXT_ALIGN_CENTER)
+				draw.SimpleText(app.Name, "GPAppName5", x + w/2 + 2, y + h + appscr.Spacing + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+				draw.SimpleText(app.Name, "GPAppName5", x + w/2, y + h + appscr.Spacing + size, Color(255,255,255), TEXT_ALIGN_CENTER)
 			end
 		elseif GPhone.CurrentFrame then
 			local frame = GPhone.CurrentFrame
@@ -890,7 +920,7 @@ SWEP.ScreenInfo = {
 						if child.Paint then
 							local px,py = parentPos( child.parent )
 							local max,may = GPhone.Width*0.016 + math.max(px + child.x, 0), GPhone.Height*0.016 + math.max(py + child.y, 0)
-							local mix,miy = math.min(GPhone.Width*0.016 + px + child.x + child.w, GPhone.PhoneMT:Width()), math.min(GPhone.Height*0.016 + py + child.y + child.h, GPhone.PhoneMT:Height())
+							local mix,miy = math.min(GPhone.Width*0.016 + px + child.x + child.w, GPhone.Width*1.032), math.min(GPhone.Height*0.016 + py + child.y + child.h, GPhone.Height*1.032)
 							
 							if mix < 0 or miy < 0 or max > GPhone.Width*1.032 or may > GPhone.Height*1.032 then continue end
 							
@@ -929,9 +959,18 @@ SWEP.ScreenInfo = {
 		else
 			hook.Run("GPhonePreRenderBackground", w, h)
 			
+			local mat = GPhone.GetImage( GPhone.Data.background )
+			local rw,rh = mat:GetFloat("$realwidth") or mat:Width(), mat:GetFloat("$realheight") or mat:Height()
+			local rt = rw / rh
 			surface.SetDrawColor(255, 255, 255, 255)
-			surface.SetMaterial( GPhone.GetImage( GPhone.Data.background ) )
-			surface.DrawTexturedRect(0, 0, w, h)
+			surface.SetMaterial( mat )
+			if GPhone.Landscape then
+				local s = w / rt
+				surface.DrawTexturedRect(0, h/2 - s/2, w, s)
+			else
+				local s = h * rt
+				surface.DrawTexturedRect(w/2 - s/2, 0, s, h)
+			end
 			
 			hook.Run("GPhonePostRenderBackground", w, h)
 			
@@ -948,8 +987,8 @@ SWEP.ScreenInfo = {
 						surface.SetMaterial( GPhone.GetImage( app.Icon ) )
 						surface.DrawTexturedRectRotated(posx + size/2, posy + size/2, size, size, ran)
 						
-						draw.SimpleText(app.Name, "GPAppName", x + size/2 + 2, y + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
-						draw.SimpleText(app.Name, "GPAppName", x + size/2, y + size, Color(255,255,255), TEXT_ALIGN_CENTER)
+						draw.SimpleText(app.Name, "GPAppName"..GPhone.Rows, x + size/2 + 2, y + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+						draw.SimpleText(app.Name, "GPAppName"..GPhone.Rows, x + size/2, y + size, Color(255,255,255), TEXT_ALIGN_CENTER)
 						
 						if cv and cv:GetBool() then
 							surface.SetDrawColor( Color( 255, 0, 0, 255 ) )
@@ -977,8 +1016,8 @@ SWEP.ScreenInfo = {
 					surface.SetMaterial( GPhone.GetImage( app.Icon ) )
 					surface.DrawTexturedRect(posx, posy, size, size)
 					
-					draw.SimpleText(app.Name, "GPAppName", posx + size/2 + 2, posy + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
-					draw.SimpleText(app.Name, "GPAppName", posx + size/2, posy + size, Color(255,255,255), TEXT_ALIGN_CENTER)
+					draw.SimpleText(app.Name, "GPAppName"..GPhone.Rows, posx + size/2 + 2, posy + size + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+					draw.SimpleText(app.Name, "GPAppName"..GPhone.Rows, posx + size/2, posy + size, Color(255,255,255), TEXT_ALIGN_CENTER)
 					
 					if cv and cv:GetBool() then
 						surface.SetDrawColor( Color( 255, 0, 0, 255 ) )
@@ -1001,7 +1040,7 @@ SWEP.ScreenInfo = {
 			end
 		end
 		
-		if wep.b_quickhold or wep.b_quickopen then
+		if !GPhone.Landscape and (wep.b_quickhold or wep.b_quickopen) then
 			local frame = wep.QuickMenu
 			if frame then
 				local oldw,oldh = ScrW(),ScrH()
@@ -1095,13 +1134,24 @@ function SWEP:ViewModelDrawn()
 	end
 	
 	local p = (self.ViewModelFlip and -1 or 1)
+	local offset = Vector(self.PhoneInfo.pos.x, self.PhoneInfo.pos.y, self.PhoneInfo.pos.z)
 	
-	self.PhoneModel:SetPos(pos + ang:Forward() * self.PhoneInfo.pos.x + ang:Right() * self.PhoneInfo.pos.y * p + ang:Up() * self.PhoneInfo.pos.z)
+	if GPhone.Landscape then
+		offset.x = offset.x + 1.3
+		offset.y = offset.y - 0.1
+		offset.z = offset.z + 0.7
+	end
+	
+	pos = pos + ang:Forward() * offset.x + ang:Right() * offset.y * p + ang:Up() * offset.z
 	ang:RotateAroundAxis(ang:Up(), p * self.PhoneInfo.ang.y)
 	ang:RotateAroundAxis(ang:Right(), p * self.PhoneInfo.ang.p)
 	ang:RotateAroundAxis(ang:Forward(), p * self.PhoneInfo.ang.r)
+	if GPhone.Landscape then
+		ang:RotateAroundAxis(ang:Forward(), 90)
+	end
 	
-	self.PhoneModel:SetAngles(ang)
+	self.PhoneModel:SetPos( pos )
+	self.PhoneModel:SetAngles( ang )
 	
 	self.PhoneModel:SetLOD(0)
 	self.PhoneModel:SetSkin(4)
@@ -1111,36 +1161,34 @@ function SWEP:ViewModelDrawn()
 	
 	local subs = self.PhoneModel:GetMaterials()
 	if LocalPlayer():GetNWString("PhoneCase") != "" then
-		for i = 1, #subs do
-			if subs[i] == "models/nitro/iphone_case" then
-				self.PhoneModel:SetSubMaterial(i-1, LocalPlayer():GetNWString("PhoneCase"))
-			end
-		end
+		self.PhoneModel:SetSubMaterial(0, LocalPlayer():GetNWString("PhoneCase"))
 	else
-		local pcol = LocalPlayer():GetWeaponColor()
-		local col = Color(math.Round(pcol.x*255),math.Round(pcol.y*255),math.Round(pcol.z*255))
+		local col = LocalPlayer():GetWeaponColor() * 255
+		local c = Color(math.Round(col.x), math.Round(col.y), math.Round(col.z))
 		
 		local mat = "models/nitro/iphone_case"
-		local params = { ["$basetexture"] = mat, ["$vertexcolor"] = 1, ["$color2"] = "{ "..col.r.." "..col.g.." "..col.b.." }" }
-		local matname = mat.."-"..col.r.."-"..col.g.."-"..col.b
+		local params = { ["$basetexture"] = mat, ["$vertexcolor"] = 1, ["$color2"] = "{ "..c.r.." "..c.g.." "..c.b.." }" }
+		local matname = mat.."-"..c.r.."-"..c.g.."-"..c.b
 		local phonemat = CreateMaterial(matname, "VertexLitGeneric", params)
 		
-		for i = 1, #subs do
+		self.PhoneModel:SetSubMaterial(0, "!"..matname)
+		
+		--[[for i = 1, #subs do
 			if subs[i] == "models/nitro/iphone_case" then
-				self.PhoneModel:SetSubMaterial(i-1, "!"..matname)
+				self.PhoneModel:SetSubMaterial(i - 1, "!"..matname)
 			end
-		end
+		end]]
 	end
 	
 	
-	local bone_id = vm:LookupBone(self.ScreenInfo.bone)
+	--[[local bone_id = vm:LookupBone(self.ScreenInfo.bone)
 	if !bone_id then return end
 	
 	local pos,ang = vm:GetBonePosition(bone_id)
 	
 	if IsValid(self.Owner) and self.Owner:IsPlayer() and self.ViewModelFlip then
 		ang.r = -ang.r
-	end
+	end]]
 	
 	pos = pos + ang:Forward() * self.ScreenInfo.pos.x + ang:Right() * self.ScreenInfo.pos.y * p + ang:Up() * self.ScreenInfo.pos.z * p
 	ang:RotateAroundAxis(ang:Up(), p * self.ScreenInfo.ang.y)
@@ -1188,24 +1236,11 @@ function SWEP:ViewModelDrawn()
 			if GPhone.CursorEnabled then
 				local cv = GetConVar("gphone_cursorsize")
 				local size = math.Round(cv and cv:GetFloat() or 60)
-				if GPhone.GetInputText() then
-					local w = math.Round(size/6)
-					local h = math.Round(size - w*2)
-					
-					draw.RoundedBox(0, x - h/2 + 1, y - size/2 + 1,	h, w, Color(70,70,70,255))
-					draw.RoundedBox(0, x - w/2 + 1, y - h/2 + 1,	w, h, Color(70,70,70,255))
-					draw.RoundedBox(0, x - h/2 + 1, y + h/2 + 1,	h, w, Color(70,70,70,255))
-					
-					draw.RoundedBox(0, x - h/2, y - size/2,	h, w, Color(col.x*255, col.y*255, col.z*255,255))
-					draw.RoundedBox(0, x - w/2, y - h/2,	w, h, Color(col.x*255, col.y*255, col.z*255,255))
-					draw.RoundedBox(0, x - h/2, y + h/2,	h, w, Color(col.x*255, col.y*255, col.z*255,255))
-				else
-					local cmat = GetConVar("gphone_cursormat")
-					local mat = cmat and cmat:GetString() or "effects/select_dot"
-					surface.SetDrawColor(col.x*255, col.y*255, col.z*255, 255)
-					surface.SetTexture( surface.GetTextureID( mat ) )
-					surface.DrawTexturedRect(x - size/2, y - size/2, size, size)
-				end
+				local cmat = GetConVar("gphone_cursormat")
+				local mat = GPhone.GetInputText() and "gphone/text" or cmat and cmat:GetString() or "effects/select_dot"
+				surface.SetDrawColor(col.x*255, col.y*255, col.z*255, 255)
+				surface.SetTexture( surface.GetTextureID( mat ) )
+				surface.DrawTexturedRectRotated(x, y, size, size, GPhone.Landscape and -90 or 0)
 			end
 		end
 	cam.End3D2D()
@@ -1214,9 +1249,20 @@ end
 hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 	local wep = LocalPlayer():GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "gmod_gphone" and wep.ScreenInfo then
-		GPhone.PhoneMT:SetTexture("$basetexture", GPhone.PhoneRT)
+		local mtx = GPhone.PhoneMT:GetMatrix("$basetexturetransform")
 		
-		render.PushRenderTarget(GPhone.PhoneRT)
+		if GPhone.Landscape then
+			mtx:SetAngles( Angle(0, -90, 0) )
+			GPhone.PhoneMT:SetTexture("$basetexture", GPhone.PhoneLSRT)
+			render.PushRenderTarget(GPhone.PhoneLSRT)
+		else
+			mtx:SetAngles( Angle(0, 0, 0) )
+			GPhone.PhoneMT:SetTexture("$basetexture", GPhone.PhoneRT)
+			render.PushRenderTarget(GPhone.PhoneRT)
+		end
+		
+		GPhone.PhoneMT:SetMatrix("$basetexturetransform", mtx)
+		
 		render.Clear(0, 0, 0, 255, true, true)
 		cam.Start2D()
 			local oldw,oldh = ScrW(),ScrH()
@@ -1249,8 +1295,8 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 				surface.SetMaterial( GPhone.GetImage( a.Icon ) )
 				surface.DrawTexturedRect(posx - size/2, posy - size/2, size, size)
 				
-				draw.SimpleText(a.Name, "GPAppName", posx + 2, posy + size/2 + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
-				draw.SimpleText(a.Name, "GPAppName", posx, posy + size/2, Color(255,255,255), TEXT_ALIGN_CENTER)
+				draw.SimpleText(a.Name, "GPAppName"..GPhone.Rows, posx + 2, posy + size/2 + 2, Color(0,0,0), TEXT_ALIGN_CENTER)
+				draw.SimpleText(a.Name, "GPAppName"..GPhone.Rows, posx, posy + size/2, Color(255,255,255), TEXT_ALIGN_CENTER)
 				
 				local cv = GetConVar("gphone_showbounds")
 				if cv and cv:GetBool() then

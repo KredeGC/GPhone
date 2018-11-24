@@ -97,8 +97,7 @@ function APP.Run( frame, w, h, ratio )
 		
 		local x = 0
 		local y = 0
-		local width = w/4
-		local height = width / GPhone.Ratio
+		local size = w/6
 		local pics,dirs = file.Find("gphone/photos/*.jpg", "DATA")
 		
 		for i,jpg in pairs(pics) do
@@ -106,14 +105,14 @@ function APP.Run( frame, w, h, ratio )
 			timer.Simple((i-1)*0.05, function()
 				x = x + 1
 				
-				while x > 4 do
+				while x > 6 do
 					x = 1
 					y = y + 1
 				end
 				
 				local but = GPnl.AddPanel( scroll )
-				but:SetSize( width, height )
-				but:SetPos( x*width - width, y*height )
+				but:SetSize( size, size )
+				but:SetPos( x*size - size, y*size )
 				but.pic = "gphone/photos/"..jpg
 				but.mat = GPhone.GetImage( "data/gphone/photos/"..jpg )
 				function but:Paint( x, y, w, h )

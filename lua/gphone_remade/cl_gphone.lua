@@ -21,6 +21,8 @@ if !GPhone then
 	GPhone.InputField		= nil
 	GPhone.VoiceChatter		= nil
 	
+	GPhone.Selfie			= false
+	GPhone.Landscape		= false
 	GPhone.CursorEnabled	= false
 	GPhone.Page				= 1
 	GPhone.Ratio			= 56 / 83
@@ -28,6 +30,7 @@ if !GPhone then
 	GPhone.Width			= GPhone.Height * GPhone.Ratio
 	GPhone.Resolution		= GPhone.Height / 830
 	GPhone.CursorPos		= {x = 560, y = 830}
+	GPhone.Rows				= 4 -- Placeholder
 	
 	GPhone.Desk = {
 		Spacing = 24 * GPhone.Resolution,
@@ -40,6 +43,34 @@ if !GPhone then
 		Spacing = 24 * GPhone.Resolution,
 		Scale = 0.6
 	}
+	
+	local w,h = math.floor(GPhone.Width*1.032),math.floor(GPhone.Height*1.032)
+	
+	GPhone.PhoneRT = GetRenderTarget("GPScreenRT_"..math.ceil(GPhone.Height), w, h, false)
+	GPhone.PhoneLSRT = GetRenderTarget("GPScreenLSRT_"..math.ceil(GPhone.Height), h, w, false)
+	GPhone.PhoneMT = CreateMaterial(
+		"GPScreenMT_"..math.ceil(GPhone.Height),
+		"UnlitGeneric",
+		{
+			["$basetexture"] = GPhone.PhoneRT,
+			["$basetexturetransform"] = "center .5 .5 scale 1 1 rotate 0 translate 0 0",
+			["$vertexcolor"] = 1,
+			["$vertexalpha"] = 1
+		}
+	)
+	
+	GPhone.CamRT = GetRenderTarget("GPCameraRT_"..math.ceil(GPhone.Height), w, h, false)
+	GPhone.CamLSRT = GetRenderTarget("GPCameraLSRT_"..math.ceil(GPhone.Height), h, w, false)
+	GPhone.CamMT = CreateMaterial(
+		"GPCameraMT_"..math.ceil(GPhone.Height),
+		"GMODScreenspace",
+		{
+			["$basetexture"] = GPhone.CamRT,
+			["$basetexturetransform"] = "center .5 .5 scale -1 -1 rotate 0 translate 0 0",
+			["$texturealpha"] = 0,
+			["$vertexalpha"] = 1,
+		}
+	)
 end
 
 
@@ -60,21 +91,23 @@ local function resetGPhoneData()
 end
 
 
-function GPhone.GetAppSize(spacing, rows)
-	local cv = GetConVar("gphone_rows")
+function GPhone.GetRows()
+	return math.ceil(GPhone.Rows * (GPhone.Landscape and GPhone.Resolution or 1))
+end
+
+function GPhone.GetAppSize(spacing)
 	local w = GPhone.Width
 	local spacing = spacing or GPhone.Desk.Spacing
-	local rows = rows or cv and cv:GetInt() or 4
+	local rows = GPhone.GetRows()
 	
 	return (w/rows)-spacing*(1+(1/rows))
 end
 
 function GPhone.GetAppPos() -- Became tired of doing all this manually... This is a much better solution since it's dynamic
-	local cv		= GetConVar("gphone_rows")
 	local w			= GPhone.Width
 	local h			= GPhone.Height
 	local spacing	= GPhone.Desk.Spacing
-	local rows		= cv and cv:GetInt() or 4
+	local rows		= GPhone.GetRows()
 	local offset	= GPhone.Desk.Offset
 	local size		= GPhone.GetAppSize(spacing, rows)
 	local ratio		= GPhone.Resolution
@@ -125,9 +158,9 @@ function GPhone.AppThumbnail( id )
 	if !frame then return false end
 	
 	local name = math.ceil(GPhone.Height).."_"..appid
-	local rt = GetRenderTarget("GPAppRT2_"..name, GPhone.Width*1.032, (GPhone.Height - GPhone.Desk.Offset)*1.032, false)
+	local rt = GetRenderTarget("GPAppRT_"..name, GPhone.Width*1.032, (GPhone.Height - GPhone.Desk.Offset)*1.032, false)
 	local mat = CreateMaterial(
-		"GPAppMT2_"..name,
+		"GPAppMT_"..name,
 		"UnlitGeneric",
 		{
 			["$basetexture"] = rt,
@@ -209,7 +242,9 @@ end
 
 surface.CreateFont("GPTopBar", { font = "Open Sans Light", size = 34 * GPhone.Resolution, additive = false, shadow = false})
 
-surface.CreateFont("GPAppName", { font = "Open Sans Light", size = 30 * GPhone.Resolution, additive = false, shadow = false})
+for i = 1, 6 do
+	surface.CreateFont("GPAppName"..i, { font = "Open Sans Light", size = 120 * GPhone.Resolution / i, additive = false, shadow = false})
+end
 
 surface.CreateFont("GPSmall", { font = "Open Sans", size = 28 * GPhone.Resolution, additive = false, shadow = false})
 
@@ -221,29 +256,6 @@ surface.CreateFont("GPTitle", { font = "Open Sans", size = 44 * GPhone.Resolutio
 surface.CreateFont("GPBugReport", { font = "Open Sans", size = 48 * GPhone.Resolution, additive = false, shadow = false})
 
 surface.CreateFont("GPLoading", { font = "Open Sans", size = 128, additive = false, shadow = false})
-
-GPhone.PhoneRT = GetRenderTarget("GPScreenRT_"..math.ceil(GPhone.Height), GPhone.Width*1.032, GPhone.Height*1.032, false)
-GPhone.PhoneMT = CreateMaterial(
-	"GPScreenMT_"..math.ceil(GPhone.Height),
-	"UnlitGeneric",
-	{
-		["$basetexture"] = GPhone.PhoneRT,
-		["$vertexcolor"] = 1,
-		["$vertexalpha"] = 1
-	}
-)
-
-GPhone.CamRT = GetRenderTarget("GPCameraRT_"..math.ceil(GPhone.Height), GPhone.Width, GPhone.Height, false)
-GPhone.CamMV = CreateMaterial(
-	"GPCameraMT_"..math.ceil(GPhone.Height),
-	"GMODScreenspace",
-	{
-		["$basetexture"] = GPhone.CamRT,
-		["$basetexturetransform"] = "center .5 .5 scale -1 -1 rotate 0 translate 0 0",
-		["$texturealpha"] = 0,
-		["$vertexalpha"] = 1,
-	}
-)
 
 
 concommand.Add("gphone_log_wipe", function()
@@ -459,14 +471,21 @@ net.Receive("GPhone_Share_Data", function(len)
 	local name = net.ReadString()
 	local data = net.ReadTable()
 	
-	local shared = GPhone.GetData("shared", {})
-	shared[name] = data
-	GPhone.SetData("shared", shared)
+	local override = hook.Run("GPhoneDataReceived", ply, name, data)
+	if !override then
+		local shared = GPhone.GetData("shared", {})
+		shared[name] = data
+		GPhone.SetData("shared", shared)
+	end
 	
 	local func = GPhone.SharedHooks[name]
 	if func then
 		GPhone.DebugFunction( func, ply, name, data )
 	end
+end)
+
+net.Receive("GPhone_Rotate", function(len)
+	GPhone.Rotate( !GPhone.Landscape )
 end)
 
 net.Receive("GPhone_VoiceCall_Request", function(len) -- Somebody requested your presence in a voicecall
@@ -489,11 +508,11 @@ function GPhone.DebugFunction( func, ... )
 	xpcall( func, catch, ... )
 end
 
-function GPhone.Debug( str, spam, notify )
+function GPhone.Debug( str, spam, err )
 	local last = GPhone.Log[#GPhone.Log]
 	if spam or last != str then -- Prevent spam
 		table.insert(GPhone.Log, str)
-		if notify then
+		if err then
 			ErrorNoHalt( str.."\n" )
 		else
 			MsgN(str)
@@ -502,7 +521,7 @@ function GPhone.Debug( str, spam, notify )
 			GPErrorTextField:SetText( string.Implode("\n", GPhone.Log) )
 		end
 		local cv = GetConVar("gphone_report")
-		if notify and cv and cv:GetBool() then
+		if err and cv and cv:GetBool() then
 			RunConsoleCommand("gphone_log_report")
 		end
 		return true
@@ -554,6 +573,7 @@ end
 function GPhone.SetAllAppData(v, a)
 	local app = a or GPhone.CurrentApp
 	if !app then return false end
+	if !table.HasValue(GPhone.Data.apps, app) then return false end
 	local appdata = GPhone.GetData("appdata", {})
 	appdata[app] = v
 	GPhone.SetData("appdata", appdata)
@@ -581,11 +601,15 @@ function GPhone.HookSharedData(name, func)
 end
 
 function GPhone.SendSharedData(ply, name, data)
-	net.Start( "GPhone_Share_Data" )
-		net.WriteEntity( ply )
-		net.WriteString( name )
-		net.WriteTable( data )
-	net.SendToServer()
+	if IsValid(ply) and ply:IsPlayer() then
+		net.Start( "GPhone_Share_Data" )
+			net.WriteEntity( ply )
+			net.WriteString( name )
+			net.WriteTable( data )
+		net.SendToServer()
+		return true
+	end
+	return false
 end
 
 function GPhone.GetSharedData(name, def)
@@ -594,9 +618,10 @@ function GPhone.GetSharedData(name, def)
 end
 
 function GPhone.GetCursorPos()
+	local i = GPhone.Landscape
 	local p = GPhone.CursorPos
-	local x,y = p.x / 1120 * GPhone.Width,p.y / 1660 * GPhone.Height
-	return x,y
+	local x,y = p.x / 1120,p.y / 1660
+	return (i and y or x) * GPhone.Width,(i and (1 - x) or y) * GPhone.Height
 end
 
 function GPhone.LocalToRoot( pnl, x, y )
@@ -611,6 +636,7 @@ end
 
 function GPhone.EnableSelfie( bool )
 	if GPhone.SelfieEnabled() == bool then return false end
+	GPhone.Selfie = bool
 	net.Start("GPhone_Selfie")
 		net.WriteBool( bool or false )
 	net.SendToServer()
@@ -618,7 +644,7 @@ function GPhone.EnableSelfie( bool )
 end
 
 function GPhone.SelfieEnabled()
-	return LocalPlayer():GetNWBool("GPSelfie")
+	return GPhone.Selfie
 end
 
 function GPhone.CreateRootPanel()
@@ -631,6 +657,7 @@ function GPhone.CreateRootPanel()
 	frame:SetPos( 0, offset )
 	frame:SetSize( w, h )
 	frame.Remove = nil
+	frame.Landscape = GPhone.Landscape
 	
 	function frame:SetFullScreen( bool )
 		self.b_fullscreen = bool
@@ -646,8 +673,8 @@ function GPhone.CreateRootPanel()
 	return frame
 end
 
-function GPhone.RunApp( name )
-	if GPhone.Panels[name] then -- Focus the app instead
+function GPhone.RunApp( name, force )
+	if GPhone.Panels[name] and !force then -- Focus the app instead
 		GPhone.AppThumbnail()
 		GPhone.FocusApp( name )
 		return GPhone.Panels[name]
@@ -663,9 +690,11 @@ function GPhone.RunApp( name )
 	
 	GPhone.AppThumbnail() -- In case it was run from inside an app
 	
-	GPhone.CurrentApp = name
 	GPhone.CurrentFrame = frame
-	GPhone.Panels[name] = frame
+	if !force then
+		GPhone.CurrentApp = name
+		GPhone.Panels[name] = frame
+	end
 	
 	if app.Run then
 		if type(app.Run) == "string" then
@@ -741,19 +770,28 @@ function GPhone.StopApp( name )
 		GPhone.CurrentApp = nil
 		GPhone.CurrentFrame = nil
 	end
-	
-	if file.Exists("gphone/screens/"..name..".jpg", "DATA") then
-		file.Delete("gphone/screens/"..name..".jpg")
-	end
 	return true
 end
 
 function GPhone.FocusApp( name )
 	local frame = GPhone.Panels[name]
 	if !frame then return false end
+	local app = GPhone.GetApp( name )
+	if frame.Landscape != GPhone.Landscape then
+		local new = GPhone.RunApp( name, true )
+		if !new then return false end
+		
+		if app.Rotate then
+			app.Rotate(GPhone.Panels[name], new)
+		end
+		
+		GPhone.StopApp( name )
+		GPhone.Panels[name] = new
+		GPhone.FocusApp( name )
+		return new
+	end
 	GPhone.CurrentApp = name
 	GPhone.CurrentFrame = frame
-	local app = GPhone.GetApp( name )
 	if app and app.Focus then
 		if type(app.Focus) == "string" then
 			local str = RunString( "appfoc = "..app.Focus, name, false )
@@ -796,6 +834,7 @@ end
 
 function GPhone.InstallApp( name )
 	if table.HasValue(GPhone.Data.apps, name) then return end
+	if !GPhone.GetApp( name ) then return end
 	local apps = GPhone.Data.apps
 	table.insert(apps, name)
 	GPhone.SetData("apps", apps)
@@ -816,16 +855,38 @@ function GPhone.UninstallApp( name )
 	end
 end
 
+function GPhone.UpdateApp( url, success, failure )
+	if !url then return false end
+	local name = GPhone.SerializeAppName(url)
+	if !table.HasValue(GPhone.Data.apps, name) then return false end
+	if !file.Exists("gphone/apps/"..name..".txt", "DATA") then return false end
+	local r = file.Read("gphone/apps/"..name..".txt", "DATA")
+	http.Fetch(url, function(body, size, headers, code)
+		if success and (body.."\nAPP.URL = \""..url.."\"") != r then
+			success( body )
+		elseif failure then
+			failure( "App is up to date" )
+		end
+	end,
+	function(err)
+		if failure then
+			failure( err )
+		end
+	end)
+	return true
+end
+
 function GPhone.DownloadApp( url )
 	local cv = GetConVar("gphone_csapp")
 	if !cv or !cv:GetBool() then return false end
 	local name = GPhone.SerializeAppName( url )
 	http.Fetch(url, function(body, size, headers, code)
-		file.Write("gphone/apps/"..name..".txt", body)
+		local content = body.."\nAPP.URL = \""..url.."\""
+		file.Write("gphone/apps/"..name..".txt", content)
 		
 		APP = {}
 		
-		RunString(body, name)
+		RunString(content, name)
 		
 		GPhone.AddApp(name, APP)
 		
@@ -869,20 +930,55 @@ function GPhone.Vibrate()
 	return false
 end
 
-function GPhone.Rotate( landscape ) -- I'm not sure how to approach this yet
-	if true then return end
+function GPhone.Rotate( landscape )
+	if GPhone.Landscape == landscape then return false end
+	local wep = LocalPlayer():GetWeapon("gmod_gphone")
+	if IsValid(wep) then
+		wep.b_quickopen = nil
+		wep.b_quickhold = nil
+	end
 	GPhone.Landscape = landscape
 	local oldw = GPhone.Width
 	local oldh = GPhone.Height
-	GPhone.Width = oldh
-	GPhone.Height = oldw
+	if (landscape and oldh > oldw) or (!landscape and oldh < oldw) then
+		GPhone.Width = oldh
+		GPhone.Height = oldw
+	end
+	local name = GPhone.CurrentApp
+	local app = GPhone.GetApp( name )
+	if name and app then
+		local new = GPhone.RunApp( name, true )
+		if !new then return false end
+		
+		if app.Rotate then
+			app.Rotate(GPhone.Panels[name], new)
+		end
+		
+		GPhone.StopApp( name )
+		GPhone.Panels[name] = new
+		GPhone.FocusApp( name )
+	elseif GPhone.CurrentFrame then
+		GPhone.FocusHome()
+	end
 end
 
 function GPhone.RenderCamera( fov, front, pre, post )
 	local ply = LocalPlayer()
 	local wep = ply:GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "gmod_gphone" then
-		render.PushRenderTarget(GPhone.CamRT)
+		local mtx = GPhone.CamMT:GetMatrix("$basetexturetransform")
+		
+		if GPhone.Landscape then
+			mtx:SetAngles( Angle(0, -90, 0) )
+			GPhone.CamMT:SetTexture("$basetexture", GPhone.CamLSRT)
+			render.PushRenderTarget(GPhone.CamLSRT)
+		else
+			mtx:SetAngles( Angle(0, 0, 0) )
+			GPhone.CamMT:SetTexture("$basetexture", GPhone.CamRT)
+			render.PushRenderTarget(GPhone.CamRT)
+		end
+		
+		GPhone.CamMT:SetMatrix("$basetexturetransform", mtx)
 		
 		render.Clear(0, 0, 0, 255)
 		render.ClearDepth()
@@ -898,10 +994,9 @@ function GPhone.RenderCamera( fov, front, pre, post )
 				ang:RotateAroundAxis(ang:Up(), 180)
 			end
 		else
-			local mdl = wep.PhoneModel
-			if IsValid(mdl) then
-				ang = mdl:GetAngles()
-				ang:RotateAroundAxis(ang:Up(), 180)
+			local vm = LocalPlayer():GetViewModel()
+			if IsValid(vm) then
+				ang = vm:GetAngles()
 			end
 		end
 		
@@ -951,9 +1046,7 @@ function GPhone.RenderCamera( fov, front, pre, post )
 		
 		render.PopRenderTarget()
 		
-		GPhone.CamMV:SetTexture("$basetexture", GPhone.CamRT)
-		
-		return GPhone.CamMV
+		return GPhone.CamMT
 	end
 	return false
 end
@@ -1017,7 +1110,7 @@ function GPhone.StopVoiceChat()
 	LocalPlayer():ConCommand("-voicerecord")
 end
 
-function GPhone.InputText( enter, change, cancel, starttext )
+function GPhone.InputText( enter, change, cancel, starttext, keypress )
 	if IsValid(GPhone.InputField) then return false end
 	
 	local frame = vgui.Create( "DFrame" )
@@ -1029,7 +1122,7 @@ function GPhone.InputText( enter, change, cancel, starttext )
 	frame:ShowCloseButton( false )
 	frame:MakePopup()
 	frame:SetMouseInputEnabled( false )
-	frame.Paint = function()
+	function frame:Paint()
 		return false
 	end
 	
@@ -1043,23 +1136,35 @@ function GPhone.InputText( enter, change, cancel, starttext )
 	function GPhone.InputField:Paint()
 		return false
 	end
+	
 	function GPhone.InputField:OnEnter()
 		self.m_entered = true
 		self:GetParent():Close()
 		if enter then
-			enter( self:GetValue() )
+			GPhone.DebugFunction( enter, self:GetValue() )
 		end
 	end
-	function GPhone.InputField:OnTextChanged()
+	if keypress then
+		function GPhone.InputField:OnKeyCodeTyped( key )
+			if key == 64 then
+				self:OnEnter()
+			end
+			keypress( key, true )
+		end
+		function GPhone.InputField:OnKeyCodeReleased( key )
+			keypress( key, false )
+		end
+	end
+	function GPhone.InputField:OnChange()
 		if change then
-			change( self:GetValue() )
+			GPhone.DebugFunction( change, self:GetValue() )
 		end
 	end
 	function GPhone.InputField:OnLoseFocus()
 		self:GetParent():Close()
 		if self.m_entered then return end
 		if cancel then
-			cancel()
+			GPhone.DebugFunction( cancel )
 		end
 	end
 end
@@ -1089,6 +1194,7 @@ end
 function GPhone.CreateHTMLPanel( w, h, url, vol )
 	local html = vgui.Create("DHTML")
 	html.URL = url or "about:blank"
+	html.Title = "about:blank"
 	html:SetPos(0, 0)
 	html:SetSize(w or GPhone.Width, h or GPhone.Height)
 	html.b_keepvolume = vol
@@ -1096,57 +1202,11 @@ function GPhone.CreateHTMLPanel( w, h, url, vol )
 		html:OpenURL( url )
 	end
 	
-	function html:ConsoleMessage() return end -- Removes all the annoying HTML messages
+	function html:OnChangeTitle( title )
+		html.Title = title
+	end
 	
-	html:AddFunction( "gmod", "getURL", function( str )
-		if str != "about:blank" then
-			html.URL = str
-		end
-	end)
-	
-	html:AddFunction( "gmod", "inputField", function( tag, id, oldval )
-		if tag and id then
-			local function onEnter( val )
-				if IsValid(html) and tag and id then
-					local js = [[
-						var x = document.getElementsByTagName("]]..tag..[[");
-						x[]]..id..[[].value = "]]..val..[[";
-					]]
-					html:RunJavascript( js )
-				end
-			end
-			local function onCancel()
-				if IsValid(html) and tag and id and oldval and type(oldval) == "string" then
-					local js = [[
-						var x = document.getElementsByTagName("]]..tag..[[");
-						x[]]..id..[[].value = "]]..oldval..[[";
-					]]
-					html:RunJavascript( js )
-				end
-			end
-			GPhone.InputText( onEnter, onEnter, onCancel, oldval )
-		end
-	end)
-	
-	html:AddFunction( "gmod", "redirect", function( href )
-		if href then
-			html:OpenURL( href )
-		end
-	end)
-	
-	html:AddFunction( "gmod", "print", function( ... )
-		local str = string.Implode(" ", { ... })
-		print("[GPhone][HTML] "..str)
-	end)
-	
-	html:AddFunction( "gmod", "javascript", function( ... ) -- Why have I done this
-		local js = string.Implode(" ", { ... })
-		html:RunJavascript( js )
-	end)
-	
-	html:AddFunction( "window", "open", function() -- From Cinema
-		-- Prevents pop-ups from opening
-	end)
+	GPhone.UpdateHTMLControl( html )
 	
 	html:SetKeyBoardInputEnabled(false)
 	html:SetPaintedManually(false)
@@ -1160,6 +1220,138 @@ function GPhone.CreateHTMLPanel( w, h, url, vol )
 	return html
 end
 
+function GPhone.UpdateHTMLControl( html )
+	if !IsValid(html) then return end
+	function html:ConsoleMessage( str )
+		if string.find(str or "", "Uncaught ReferenceError: gmod is not defined") then
+			print("[ERROR] '"..tostring(html).."': "..str)
+			GPhone.UpdateHTMLControl( html )
+		end
+	end
+	
+	html:AddFunction( "gmod", "getURL", function( str )
+		if str != "about:blank" then
+			html.URL = str
+		end
+	end)
+	
+	html:AddFunction( "gmod", "inputField", function( tag, id, oldval )
+		if tag and id then
+			local function onChange( val )
+				if IsValid(html) and tag and id then
+					local js = [[var x = document.getElementsByTagName("]]..tag..[[")[]]..id..[[].value = "]]..val..[[";]]
+					html:RunJavascript( js )
+				end
+			end
+			local function onEnter( val )
+				if IsValid(html) then
+					if string.StartWith(html.URL, "https://www.google.com") then // Why are javascript events so confusing to hack together?
+						html:OpenURL("https://www.google.com/search?q="..string.gsub(val, " ", "+"))
+					elseif tag and id then
+						local js = [[var el = document.getElementsByTagName("]]..tag..[[")[]]..id..[[];
+							
+							var ev = new Event("keydown"); // Fuck Awesomium for being this old
+							ev.key = "Enter";
+							ev.keyCode = 13;
+							ev.charCode = ev.keyCode;
+							ev.which = ev.keyCode;
+							ev.altKey = false;
+							ev.ctrlKey = false;
+							ev.shiftKey = false;
+							ev.metaKey = false;
+							ev.bubbles = true;
+							
+							el.dispatchEvent(ev);
+						]]
+						html:RunJavascript( js )
+					end
+				end
+			end
+			local function keyPress( key, pressed )
+				local chr = input.GetKeyName(key)
+				local asc = string.byte(chr)
+				if string.len(chr) > 1 then
+					if chr == "BACKSPACE" then chr = "Backspace" asc = 8 end
+					if chr == "LEFTARROW" then chr = "ArrowLeft" asc = 37 end
+					if chr == "UPARROW" then chr = "ArrowUp" asc = 38 end
+					if chr == "RIGHTARROW" then chr = "ArrowRight" asc = 39 end
+					if chr == "DOWNARROW" then chr = "ArrowDown" asc = 40 end
+				end
+				
+				local js = [[var el = document.getElementsByTagName("]]..tag..[[")[]]..id..[[];
+					
+					var ev = new Event("]]..(pressed and "keydown" or "keyup")..[["); // Fuck Awesomium for being this old
+					ev.key = "]]..chr..[[";
+					ev.keyCode = ]]..asc..[[;
+					ev.charCode = ev.keyCode;
+					ev.which = ev.keyCode;
+					ev.altKey = false;
+					ev.ctrlKey = false;
+					ev.shiftKey = false;
+					ev.metaKey = false;
+					ev.bubbles = true;
+					
+					el.dispatchEvent(ev);
+				]]
+				
+				html:RunJavascript( js )
+			end
+			GPhone.InputText( onEnter, onChange, nil, oldval, keyPress )
+		end
+	end)
+	
+	html:AddFunction( "gmod", "print", function( ... )
+		local str = string.Implode(" ", { ... })
+		print("[GPhone][HTML] "..str)
+	end)
+	
+	html:AddFunction( "gmod", "run", function( ... ) -- I don't even need this but whatever
+		local code = string.Implode(" ", { ... })
+		if code != "" then
+			this = html
+			local str = RunString(code, "gmod.run", false)
+			if str then
+				GPhone.Debug("[ERROR] '"..tostring(html).."': "..str, false, true)
+			end
+			this = nil
+		end
+	end)
+	
+	html:AddFunction( "gmod", "isAwesomium", function( str )
+		local bool = tobool(str)
+		GPhone.IsAwesomium = bool
+		if bool and GetConVar("gphone_chromium"):GetBool() then
+			html:SetHTML([[<!doctype>
+			<html>
+				<head>
+					<title>Fuck Awesomium</title>
+					<style>
+						p {
+							color: #acb2b8;
+							font-size: 40px;
+						}
+					</style>
+				</head>
+				<body style="background-color: #1b2838;">
+					<p>I would <b>HIGHLY</b> suggest switching to the Chromium branch due to the Awesomium browser being very old and unsupported on many sites.</p>
+					<img src="https://raw.githubusercontent.com/KredeGC/GPhone/master/tutorial/chromium.png" width="100%" />
+					<p>This can be done by right-clicking Garry's Mod in your Steam Library and selecting properties.
+					<br>In the properties-window, navigate to the 'BETAS' tab and select 'chromium -' from the dropdown.</p>
+					<p>If you <b>DON'T</b> want to switch to Chromium, click <a style="color: #ffffff; text-decoration: none;" href="javascript:gmod.run('this:GoBack() this.Title=\'Google\' RunConsoleCommand(\'gphone_chromium\', 0)');">here</a> to turn off this notification and go back.</p>
+				</body>
+			</html>]])
+		end
+	end)
+	
+	html:AddFunction( "gmod", "redirect", function( url ) -- TODO: Make a popup asking for permission to redirect
+		
+	end)
+	
+	html:AddFunction( "window", "open", function( ... )
+		-- Remove popups
+	end)
+end
+
 function GPhone.CloseHTMLPanel( html )
 	if table.HasValue(GPhone.HTML, html) then
 		table.RemoveByValue(GPhone.HTML, html)
@@ -1171,33 +1363,31 @@ end
 
 local genicon = Material( "vgui/spawnmenu/generating" )
 
-function GPhone.ReturnHTMLMaterial( html )
-	local valid = IsValid(html)
-	if valid then
+function GPhone.GetHTMLMaterial( html )
+	if IsValid(html) then
 		html:UpdateHTMLTexture()
+		if html.Mat then
+			return html.Mat
+		elseif html:GetHTMLMaterial() then
+			local mat = html:GetHTMLMaterial() -- Get the html material
+			
+			local scale_x,scale_y = html:GetWide() / mat:Width(),html:GetTall() / mat:Height() -- Setup the material-data with the proper scaling
+			local matdata = {
+				["$basetexture"] = mat:GetName(),
+				["$basetexturetransform"] = "center 0 0 scale "..scale_x.." "..scale_y.." rotate 0 translate 0 0",
+				["$vertexcolor"] = 1,
+				["$vertexalpha"] = 1,
+				["$nocull"] = 1,
+				["$model"] = 1
+			}
+			
+			local id = string.gsub(mat:GetName(), "__vgui_texture_", "")
+			html.Mat = CreateMaterial("GPhone_HTMLMaterial_"..id, "UnlitGeneric", matdata)
+			
+			return html.Mat
+		end
 	end
-	if !html.Mat and valid and html:GetHTMLMaterial() then
-		local mat = html:GetHTMLMaterial() -- Get the html material
-		
-		local scale_x,scale_y = html:GetWide() / mat:Width(),html:GetTall() / mat:Height() -- Setup the material-data with the proper scaling
-		local matdata = {
-			["$basetexture"] = mat:GetName(),
-			["$basetexturetransform"] = "center 0 0 scale "..scale_x.." "..scale_y.." rotate 0 translate 0 0",
-			["$vertexcolor"] = 1,
-			["$vertexalpha"] = 1,
-			["$nocull"] = 1,
-			["$model"] = 1
-		}
-		
-		local id = string.Replace(mat:GetName(), "__vgui_texture_", "")
-		html.Mat = CreateMaterial("GPhone_HTMLMaterial_"..id, "UnlitGeneric", matdata)
-		
-		return html.Mat
-	elseif valid and html.Mat then
-		return html.Mat
-	else
-		return genicon
-	end
+	return genicon
 end
 
 function GPhone.GetHTMLPos( frame, html, mx, my )
@@ -1206,7 +1396,7 @@ function GPhone.GetHTMLPos( frame, html, mx, my )
 	local fx,fy = parentPos( frame )
 	local fw,fh = frame.w,frame.h
 	
-	local mx,my = ((mx-fx)/fw)*html:GetWide(),((my-fy)/fh)*html:GetTall()
+	local mx,my = ((mx - fx) / fw) * html:GetWide(),((my - fy) / fh) * html:GetTall()
 	return mx,my
 end
 
@@ -1214,9 +1404,7 @@ function GPhone.PerformHTMLClick( html, x, y )
 	if !IsValid(html) then return false end
 	html:RunJavascript([[
 		var elem = document.elementFromPoint(]]..x..[[, ]]..y..[[);
-		// elem.style.color = 'red';
-		
-		// This is quite a hacky way, but elem.click() only works on buttons....
+		elem.focus();
 		
 		function pressParents( el ) {
 			if (el.tagName == "INPUT" && el.type == "text") {
@@ -1224,16 +1412,12 @@ function GPhone.PerformHTMLClick( html, x, y )
 				for (i = 0; i < x.length; i++) {
 					if (x[i] == el) {
 						gmod.inputField( el.tagName, i, el.value );
+						break;
 					}
 				}
-			} else if (el.onclick) {
-				el.onclick();
-			} else if (el.tagName == "A") {
+			} else if (el.tagName == "A" && el.target == "_blank") {
 				if (el.href) {
-					if (el.href.search("javascript:") > -1) { // Run javascript code if possible
-						gmod.print(el.href.sub(11));
-						eval(el.href.sub(11));
-					} else if (el.href.search(window.location.protocol) == 0 || el.href.search(window.location.protocol) == -1) {
+					if (el.href.search(window.location.protocol) == 0 || el.href.search(window.location.protocol) == -1) {
 						gmod.redirect(el.href);
 					} else if (el.href.search("#")) {
 						gmod.redirect(window.location.href + el.href);
@@ -1241,16 +1425,27 @@ function GPhone.PerformHTMLClick( html, x, y )
 						gmod.redirect(window.location.hostname + "/" + el.href);
 					}
 				}
-			} else if (el.tagName == "IFRAME") {
-				if (el.src) {
-					gmod.redirect(el.src + "?hd=1&autoplay=true");
+			} else if (el.click) {
+				el.click();
+			} else if (el.onclick) {
+				el.onclick();
+			} else if (el.tagName == "A") {
+				if (el.href) {
+					if (el.href.search("javascript:") > -1) {
+						eval(el.href.substr(11));
+					} else if (el.href.search(window.location.protocol) == 0 || el.href.search(window.location.protocol) == -1) {
+						window.location.href = el.href;
+					} else if (el.href.search("#")) {
+						window.location.href = window.location.href + el.href;
+					} else {
+						window.location.href = window.location.hostname + "/" + el.href;
+					}
 				}
 			} else if (el.parentElement) {
 				pressParents( el.parentElement );
 			}
 		}
 		pressParents( elem )
-		elem.click();
 	]])
 	return true
 end

@@ -18,26 +18,34 @@ hook.Add("Think", "GPhoneQueueImage", function()
 			if html:IsLoading() then
 				if !html.b_loading then
 					html.b_loading = true
-					html:RunJavascript([[window.onerror = function(msg, url, line, col, error) {
-						gmod.print("Line " + line + ": " + msg);
-					};]])
-					html:RunJavascript([[gmod.getURL( window.location.href );]])
+					if GPhone.IsAwesomium then
+						html:QueueJavascript([[window.onerror = function(msg, url, line, col, error) {
+							gmod.print("Line " + line + ": " + msg);
+						};
+						isAwesomium = navigator.userAgent.indexOf("Awesomium") != -1;
+						gmod.getURL( window.location.href );]])
+					end
 				end
 			else
 				if html.b_loading then
 					html.b_loading = false
-					html:RunJavascript([[window.onerror = function(msg, url, line, col, error) {
+					GPhone.UpdateHTMLControl( html ) -- Chromium likes to randomly delete these. Remind it who's boss
+					html:QueueJavascript([[window.onerror = function(msg, url, line, col, error) {
 						gmod.print("Line " + line + ": " + msg);
-					};]])
-					html:RunJavascript([[gmod.getURL( window.location.href );]])
+					};
+					isAwesomium = navigator.userAgent.indexOf("Awesomium") != -1;
+					gmod.getURL( window.location.href );]])
+					
+					if GPhone.IsAwesomium == nil then
+						html:QueueJavascript([[gmod.isAwesomium( isAwesomium );]])
+					end
 				elseif !html.b_keepvolume then
 					local vol = GetConVar("gphone_volume")
 					html:RunJavascript([[var x = [];
 					x.push.apply( x, document.getElementsByTagName("VIDEO") );
 					x.push.apply( x, document.getElementsByTagName("AUDIO") );
 					for (i = 0; i < x.length; i++) {
-						var vid = x[i];
-						vid.volume = ]]..(vol and vol:GetFloat() or 1)..[[;
+						x[i].volume = ]]..(vol and vol:GetFloat() or 1)..[[;
 					}]])
 				end
 			end
@@ -175,8 +183,9 @@ hook.Add("InputMouseApply", "_GPhoneMouseInput", function( cmd, x, y, angle )
 		local cv = GetConVar("gphone_sensitivity")
 		local sens = cv and cv:GetFloat() or 4
 		
-		local ychange = y * sens * 0.2
-		local xchange = x * sens * 0.2
+		local inv = GPhone.Landscape
+		local ychange = (inv and x or y) * sens * 0.2
+		local xchange = (inv and -y or x) * sens * 0.2
 		
 		local x = math.Clamp(GPhone.CursorPos.x + xchange, -40, 1168)
 		local y = math.Clamp(GPhone.CursorPos.y + ychange, -380, 2052)
@@ -184,7 +193,7 @@ hook.Add("InputMouseApply", "_GPhoneMouseInput", function( cmd, x, y, angle )
 		GPhone.CursorPos = {x = x, y = y}
 		
 		cmd:SetViewAngles( angle )
-		 
+		
 		return true
 	end
 end)
@@ -238,20 +247,18 @@ function InitGPhoneAppCreator()
 	surface.SetFont("DermaDefault")
 	local _,fontheight = surface.GetTextSize(" ")
 	
-	function GPAppCreator:CoordsToCarot( x,y )
+	function GPAppCreator:CoordsToCarot( x, y )
 		local stops = GPAppCreator:GetTextTable()
-		
-		local i = x
 		
 		for cy = 1, y do
 			local w = string.len(stops[cy])
-			i = i + w
+			x = x + w
 		end
 		
-		return i
+		return x
 	end
 	function GPAppCreator:GetCaret()
-		return math.Clamp(self.Caret or 0, 0, string.len(self.Code or "")+1)
+		return math.Clamp(self.Caret or 0, 0, string.len(self.Code or "") + 1)
 	end
 	function GPAppCreator:GetCaretCoords()
 		local text = self.Code or ""

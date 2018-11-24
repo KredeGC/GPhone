@@ -15,6 +15,7 @@ GPDefaultData = {
 file.CreateDir("gphone/users")
 if CLIENT then
 	file.CreateDir("gphone/apps")
+	file.CreateDir("gphone/builds")
 end
 
 local function loadApps()
@@ -28,7 +29,7 @@ local function loadApps()
 		if SERVER then
 			AddCSLuaFile("gpapps/"..v)
 		else
-			local name = string.sub(v, 0, string.len(v)-4)
+			local name = string.sub(v, 0, string.len(v) - 4)
 			
 			APP = {}
 			local r = file.Read("gpapps/"..v, "LUA")
@@ -72,7 +73,10 @@ local function loadApps()
 		end
 	end
 end
-loadApps()
+
+hook.Add("Initialize", "GPhoneInitialize", function()
+	loadApps()
+end)
 
 local selfietranslate = {}
 selfietranslate[ ACT_MP_STAND_IDLE ] 		= ACT_HL2MP_IDLE_PISTOL
@@ -102,14 +106,22 @@ if SERVER then
 	end)
 else
 	list.Add( "CursorMaterials", "effects/select_dot" )
+	list.Add( "CursorMaterials", "effects/select_ring" )
 	list.Add( "CursorMaterials", "vgui/minixhair" )
-	list.Add( "CursorMaterials", "effects/wheel_ring" )
 	list.Add( "CursorMaterials", "gui/faceposer_indicator" )
 	list.Add( "CursorMaterials", "sprites/grip" )
 	list.Add( "CursorMaterials", "vgui/cursors/hand" )
-	list.Add( "CursorMaterials", "vgui/cursors/crosshair" )
 	if !Material("sprites/arrow"):IsError() then
 		list.Add( "CursorMaterials", "sprites/arrow" )
+	end
+	if !Material("vgui/glyph_practice"):IsError() then
+		list.Add( "CursorMaterials", "vgui/glyph_practice" )
+	end
+	if !Material("vgui/glyph_practice"):IsError() then
+		list.Add( "CursorMaterials", "vgui/flagtime_full" )
+	end
+	if !Material("vgui/glyph_practice"):IsError() then
+		list.Add( "CursorMaterials", "vgui/glyph_close_x" )
 	end
 	
 	net.Receive("GPhone_Load_Apps", function(l)
@@ -130,7 +142,7 @@ else
 		["gphone_thumbnail"]	= "1",		-- Enable screen thumbnails (May cause lag)
 		["gphone_rows"]			= "4",		-- Amount of rows per page
 		["gphone_holdtime"]		= "0.5",	-- Holdtime
-		["gphone_brightness"]	= "1",		-- Screen brightness
+		["gphone_brightness"]	= "0.8",	-- Screen brightness
 		["gphone_volume"]		= "1",		-- Volume
 		["gphone_sensitivity"]	= "4",		-- Cursor sensitivity
 		["gphone_cursorsize"]	= "60",		-- Cursor size
@@ -147,6 +159,16 @@ else
 	if GetConVar("gphone_showbounds") == nil then
 		CreateClientConVar("gphone_showbounds", "0", false, false, "Whether to show boundaries of all clickable panels")
 	end
+	
+	if GetConVar("gphone_chromium") == nil then
+		CreateClientConVar("gphone_chromium", "1", true, false, "Notify user about chromium every time they open the browser")
+	end
+	
+	GPhone.Rows = math.ceil(GetConVar("gphone_rows"):GetInt() * (GPhone.Landscape and GPhone.Resolution or 1)) -- Workaround
+	
+	cvars.AddChangeCallback("gphone_rows", function(_, _, new)
+		GPhone.Rows = math.Round(new)
+	end)
 	
 	local function GPAdminSettingsPanel(panel)
 		panel:ClearControls()

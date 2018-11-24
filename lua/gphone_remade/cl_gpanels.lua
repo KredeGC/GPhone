@@ -303,14 +303,14 @@ local paneltypes = {
 		
 		function frame:OnCancel()
 		end
-		function frame:OnEnter( value )
+		function frame:OnEnter()
 		end
-		function frame:OnChange( value )
+		function frame:OnChange()
 		end
 		
 		function frame:OnClick()
-			frame.b_typing = true
-			GPhone.InputText( frame.Enter, frame.Change, frame.Cancel, frame:GetText() )
+			self.b_typing = true
+			GPhone.InputText( self.Enter, self.Change, self.Cancel, self:GetText() )
 		end
 		
 		function frame:Paint( x, y, w, h )
@@ -333,14 +333,22 @@ local paneltypes = {
 			return self.d_html
 		end
 		
+		function frame:GetTitle()
+			return IsValid(self.d_html) and self.d_html.Title or false
+		end
+		
 		function frame:OnRemove()
 			GPhone.CloseHTMLPanel( self:GetHTML() )
 		end
 		
 		function frame:Paint( x, y, w, h )
 			surface.SetDrawColor( 255, 255, 255 )
-			surface.SetMaterial( GPhone.ReturnHTMLMaterial( self:GetHTML() ) )
+			surface.SetMaterial( GPhone.GetHTMLMaterial( self:GetHTML() ) )
 			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		
+		function frame:OpenURL( url )
+			self.d_html:OpenURL( url )
 		end
 		
 		function frame:OnClick()
@@ -351,7 +359,7 @@ local paneltypes = {
 		end
 		
 		function frame:OnScroll( num )
-			local val = -num * 100 * GPhone.Resolution
+			local val = -num * 75 * GPhone.Resolution
 			self.d_html:RunJavascript( [[window.scrollBy(0, ]]..val..[[);]] )
 		end
 	end,
@@ -361,7 +369,7 @@ local paneltypes = {
 			if ext != "mp4" and ext != "webm" then return false end -- Only .mp4 and .webm supported
 			if !file.Exists(path, "GAME") then return false end
 			local r = file.Read(path, "GAME")
-			local data = util.Base64Encode( r )
+			local data = util.Base64Encode( r ) -- This is very intense, but I don't see any other way
 			
 			if IsValid(self.d_html) then
 				GPhone.CloseHTMLPanel( self.d_html )
@@ -374,8 +382,8 @@ local paneltypes = {
 			<body style="overflow:hidden">
 			
 			<video id="player" width="100%" height="100%" loop autoplay>
-			  <source src="data:video/]]..ext..[[;base64,]]..data..[[" type="video/]]..ext..[[">
-			  Your browser does not support the video tag.
+				<source src="data:video/]]..ext..[[;base64,]]..data..[[" type="video/]]..ext..[[">
+				Your browser does not support the video tag.
 			</video>
 			
 			<script type="text/javascript">
@@ -398,7 +406,7 @@ local paneltypes = {
 		
 		function frame:Paint( x, y, w, h )
 			surface.SetDrawColor( 255, 255, 255 )
-			surface.SetMaterial( GPhone.ReturnHTMLMaterial( self:GetHTML() ) )
+			surface.SetMaterial( GPhone.GetHTMLMaterial( self:GetHTML() ) )
 			surface.DrawTexturedRect( 0, 0, w, h )
 		end
 		

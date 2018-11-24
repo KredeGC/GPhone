@@ -37,9 +37,28 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 		
-		draw.SimpleText("Storage", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Apps", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 	function apptab:OnClick()
+		local pnl = frame:GetTab( "apps" )
+		pnl:Refresh()
+		frame:OpenTab( "apps", 0.25, "in-right", "out-left" )
+	end
+	
+	space = space + 64 * ratio
+		
+	local storagetab = GPnl.AddPanel( scroll )
+	storagetab:SetSize( w, 64 * ratio )
+	storagetab:SetPos( 0, space )
+	function storagetab:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("Storage", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+	function storagetab:OnClick()
+		local pnl = frame:GetTab( "storage" )
+		pnl:Refresh()
 		frame:OpenTab( "storage", 0.25, "in-right", "out-left" )
 	end
 	
@@ -234,47 +253,126 @@ function APP.Run( frame, w, h, ratio )
 	
 	
 	
+	local apps = frame:AddTab( "apps", "panel" )
+	
+	local scroll = GPnl.AddPanel( apps, "scroll" )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
+	
+	function apps:Refresh()
+		scroll:Clear()
+		local space = 12 * ratio
+		for _,name in pairs(GPhone.Data.apps or {}) do
+			if GPDefaultApps and table.HasValue(GPDefaultApps, name) then continue end
+			local app = GPhone.GetApp(name)
+			if !app then return end
+			
+			local but = GPnl.AddPanel( scroll )
+			but:SetSize( w, 110 * ratio )
+			but:SetPos( 0, space )
+			but.Name = app.Name or name
+			but.Author = app.Author or "N/A"
+			function but:Paint( x, y, w, h )
+				draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+				draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+				
+				draw.SimpleText(self.Name, "GPMedium", h + 4, 4, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				draw.SimpleText(self.Author or "N/A", "GPSmall", h + 4, h/2, Color(160, 160, 160), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			end
+			
+			local icon = GPnl.AddPanel( but )
+			icon:SetSize( 102 * ratio, 102 * ratio )
+			icon:SetPos( 4 * ratio, 4 * ratio )
+			icon.Icon = app.Icon or "N/A"
+			function icon:Paint( x, y, w, h )
+				surface.SetDrawColor( 255, 255, 255 )
+				surface.SetMaterial( GPhone.GetImage( self.Icon ) )
+				surface.DrawTexturedRect( 0, 0, w, h )
+			end
+			
+			local clear = GPnl.AddPanel( but )
+			clear:SetSize( 120 * ratio, 40 * ratio )
+			clear:SetPos( w - 145 * ratio, 35 * ratio )
+			clear.App = name
+			function clear:Paint( x, y, w, h )
+				draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
+				draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
+				draw.SimpleText("Uninstall", "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+			function clear:OnClick()
+				GPhone.UninstallApp(self.App)
+				self:Remove()
+			end
+			
+			space = space + 110 * ratio
+		end
+	end
+	
+	local header = GPnl.AddPanel( apps )
+	header:SetPos( 0, 0 )
+	header:SetSize( w, 64 * ratio )
+	function header:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("Apps", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	
+	local back = GPnl.AddPanel( header )
+	back:SetPos( 0, 0 )
+	back:SetSize( 64 * ratio, 64 * ratio )
+	function back:OnClick()
+		frame:OpenTab( "home", 0.25, "in-left", "out-right" )
+	end
+	function back:Paint( x, y, w, h )
+		draw.SimpleText("<", "GPTitle", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	
+	
+	
 	local storage = frame:AddTab( "storage", "panel" )
-	local space = 12 * ratio
 	
 	local scroll = GPnl.AddPanel( storage, "scroll" )
 	scroll:SetPos( 0, 64 * ratio )
 	scroll:SetSize( w, h - 64 * ratio )
 	
-	
-	for name,data in pairs(GPhone.Data.appdata or {}) do
-		local app = GPhone.GetApp(name)
-		
-		local but = GPnl.AddPanel( scroll )
-		but:SetSize( w, 48 * ratio )
-		but:SetPos( 0, space )
-		but.Name = app and app.Name or name
-		but.Size = string.len( util.TableToJSON( data ) ) - 2
-		function but:Paint( x, y, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
-			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+	function storage:Refresh()
+		scroll:Clear()
+		local space = 12 * ratio
+		for name,data in pairs(GPhone.Data.appdata or {}) do
+			local app = GPhone.GetApp(name)
 			
-			draw.SimpleText(math.Round(self.Size/1024, 3).." kb", "GPSmall", w - h - mar, h/2, Color(70, 70, 70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			local but = GPnl.AddPanel( scroll )
+			but:SetSize( w, 48 * ratio )
+			but:SetPos( 0, space )
+			but.Name = app and app.Name or name
+			but.Size = string.len( util.TableToJSON( data ) ) - 2
+			function but:Paint( x, y, w, h )
+				draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+				draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+				
+				draw.SimpleText(math.Round(self.Size/1024, 3).." kb", "GPSmall", w - h - mar, h/2, Color(70, 70, 70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				
+				draw.SimpleText(self.Name, "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			end
 			
-			draw.SimpleText(self.Name, "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			local clear = GPnl.AddPanel( but )
+			clear:SetSize( 48 * ratio, 48 * ratio )
+			clear:SetPos( w - 48 * ratio, 0 )
+			clear.App = name
+			function clear:Paint( x, y, w, h )
+				surface.SetDrawColor(70, 70, 70)
+				surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
+				surface.DrawTexturedRect( 0, 0, w, h )
+			end
+			function clear:OnClick()
+				but.Size = 0
+				GPhone.ClearAllAppData(self.App)
+				self:Remove()
+			end
+			
+			space = space + 48 * ratio
 		end
-		
-		local clear = GPnl.AddPanel( but )
-		clear:SetSize( 48 * ratio, 48 * ratio )
-		clear:SetPos( w - 48 * ratio, 0 )
-		clear.App = name
-		function clear:Paint( x, y, w, h )
-			surface.SetDrawColor(70, 70, 70)
-			surface.SetTexture( surface.GetTextureID( "gui/html/stop" ) )
-			surface.DrawTexturedRect( 0, 0, w, h )
-		end
-		function clear:OnClick()
-			but.Size = 0
-			GPhone.ClearAllAppData(self.App)
-			self:Remove()
-		end
-		
-		space = space + 48 * ratio
 	end
 	
 	local header = GPnl.AddPanel( storage )
@@ -388,24 +486,27 @@ function APP.Run( frame, w, h, ratio )
 	
 	local about = frame:AddTab( "about", "panel" )
 	
-	local content = GPnl.AddPanel( about, "panel" )
-	content:SetPos( 0, 64 * ratio )
-	content:SetSize( w, h - 64 * ratio )
+	local scroll = GPnl.AddPanel( about, "scroll" )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
+	
+	local content = GPnl.AddPanel( scroll, "panel" )
+	content:SetSize( w, 280 * ratio )
+	content:SetPos( 0, 12 * ratio )
 	function content:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220 ) )
-		draw.RoundedBox( 0, 0, 12, w, w/2-2, Color( 255, 255, 255 ) )
-		draw.RoundedBox( 0, 0, 10 + w/2, w, 2, Color( 80, 80, 80, 255 ) )
+		draw.RoundedBox( 0, 0, 0, w, h - 2, Color( 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h - 2, w, 2, Color( 80, 80, 80, 255 ) )
 		
 		surface.SetDrawColor(255, 255, 255)
 		surface.SetTexture( surface.GetTextureID( "vgui/entities/gmod_gphone" ) )
-		surface.DrawTexturedRect( 4, 16, w/2-8, w/2-8 )
+		surface.DrawTexturedRect( 8, 8, h - 16, h - 16 )
 		
-		draw.SimpleText("GPhone Remade", "GPTitle", w/2 + 4, 16, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText("Created by Krede", "GPMedium", w/2 + 4, 16 + 42 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("GPhone Remade", "GPTitle", h + 4, 0, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("Created by Krede", "GPMedium", h + 4, 42 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		if self.Update then
-			draw.SimpleText("Last update:", "GPMedium", w/2 + 4, 8 + w/2 - 36*2 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(self.Update, "GPMedium", w/2 + 4, 8 + w/2 - 36 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText("Last update:", "GPMedium", h + 4, h - 36*2 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(self.Update, "GPMedium", h + 4, h - 36 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		end
 	end
 	
@@ -442,9 +543,9 @@ function APP.Run( frame, w, h, ratio )
 		draw.SimpleText("<", "GPTitle", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	
-	local update = GPnl.AddPanel( content )
-	update:SetPos( 0, w/2 + 12 )
+	local update = GPnl.AddPanel( scroll )
 	update:SetSize( w, 64 * ratio )
+	update:SetPos( 0, 292 * ratio )
 	function update:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )

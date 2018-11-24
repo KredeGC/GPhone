@@ -6,27 +6,24 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
-	local content = GPnl.AddPanel( frame, "html" )
-	content:SetPos( 0, 64 * ratio )
-	content:SetSize( w, h - 128 * ratio )
-	content:Init( "https://www.google.com" )
+	local size = 64 * ratio
+	
+	frame.content = GPnl.AddPanel( frame, "html" )
+	frame.content:SetPos( 0, size )
+	frame.content:SetSize( w, h - size * 2 )
+	frame.content:Init( "https://www.google.com" )
 	
 	function frame:OpenURL( url )
-		local html = content:GetHTML()
-		if IsValid(html) then
-			html:OpenURL( url )
-		end
+		frame.content:OpenURL( url )
 	end
 	
 	local header = GPnl.AddPanel( frame, "panel" )
 	header:SetPos( 0, 0 )
-	header:SetSize( w, 64 * ratio )
+	header:SetSize( w, size )
 	function header:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 	end
-	
-	local size = header:GetHeight()
 	
 	local extend = GPnl.AddPanel( header )
 	extend:SetPos( 0, 0 )
@@ -37,7 +34,7 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function extend:OnClick()
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
 			gui.OpenURL( html.URL )
 		end
@@ -60,7 +57,7 @@ function APP.Run( frame, w, h, ratio )
 	end
 	function refresh:OnClick()
 		self.Delay = CurTime() + 0.5
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
 			html:Refresh( true )
 		end
@@ -69,28 +66,32 @@ function APP.Run( frame, w, h, ratio )
 	local url = GPnl.AddPanel( header, "textentry" )
 	url:SetPos( 6 * ratio + size, 6 * ratio )
 	url:SetSize( w - size*2 - 12 * ratio, size - 12 * ratio )
-	url:SetText( "https://www.google.com/search?q=" )
 	function url:Paint( x, y, w, h )
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 		
-		local html = content:GetHTML()
-		local text = url.b_typing and GPhone.GetInputText() or IsValid(html) and html.URL or ""
+		local text = self.b_typing and GPhone.GetInputText() or frame.content:GetTitle()
 		if text then
 			surface.SetFont("GPMedium")
 			local size = surface.GetTextSize(text)
 			
 			if size > w-8 then
 				draw.SimpleText(text, "GPMedium", w-4, h/2, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-			else
+			elseif self.b_typing then
 				draw.SimpleText(text, "GPMedium", 4, h/2, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			else
+				draw.SimpleText(text, "GPMedium", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			end
 		end
 	end
-	function url:OnEnter( url )
-		frame:OpenURL( url )
+	function url:OnClick()
+		self.b_typing = true
+		local html = frame.content:GetHTML()
+		local text = IsValid(html) and html.URL or ""
+		GPhone.InputText( self.Enter, self.Change, self.Cancel, text )
 	end
-	
-	url:OnClick()
+	function url:OnEnter( link )
+		frame:OpenURL( link )
+	end
 	
 	local footer = GPnl.AddPanel( frame, "panel" )
 	footer:SetPos( 0, h - 64 * ratio )
@@ -110,9 +111,9 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function left:OnClick()
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
-			html:RunJavascript( [[window.scrollBy(-75);]] )
+			html:QueueJavascript( [[window.scrollBy(-75, 0);]] )
 		end
 	end
 	
@@ -125,9 +126,9 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function right:OnClick()
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
-			html:RunJavascript( [[window.scrollBy(75);]] )
+			html:QueueJavascript( [[window.scrollBy(75, 0);]] )
 		end
 	end
 	
@@ -141,7 +142,7 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function bkwd:OnClick()
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
 			html:GoBack()
 		end
@@ -156,9 +157,15 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function fwd:OnClick()
-		local html = content:GetHTML()
+		local html = frame.content:GetHTML()
 		if IsValid(html) then
 			html:GoForward()
 		end
+	end
+end
+
+function APP.Rotate( old, new )
+	if old.content and new.content then
+		new.content:OpenURL( old.content:GetHTML().URL )
 	end
 end

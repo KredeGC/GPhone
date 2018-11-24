@@ -3,7 +3,9 @@ util.AddNetworkString( "GPhone_Share_Data" )
 util.AddNetworkString( "GPhone_Reset" )
 util.AddNetworkString( "GPhone_Load_Client" )
 util.AddNetworkString( "GPhone_Load_Apps" )
+util.AddNetworkString( "GPhone_Rotate" )
 util.AddNetworkString( "GPhone_Selfie" )
+
 util.AddNetworkString( "GPhone_SMS_Receive" )
 
 util.AddNetworkString( "GPhone_VoiceCall_Request" )

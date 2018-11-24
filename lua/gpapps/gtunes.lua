@@ -257,7 +257,7 @@ hook.Add("Think", "GTunesRepeat", function()
 	local music = GPhone.GetMusic()
 	if GPhone.GetAppData("repeat", false, "gtunes") and music then
 		local channel = music.Channel
-		if channel:GetTime() >= music.Length then
+		if channel:GetState() == GMOD_CHANNEL_STOPPED then
 			channel:Play()
 		end
 	end
