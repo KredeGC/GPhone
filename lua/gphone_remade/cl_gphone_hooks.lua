@@ -156,7 +156,7 @@ hook.Add("PostPlayerDraw", "DrawGFlashlight", function(ply)
 		if ply != LocalPlayer() or GetViewEntity() != LocalPlayer() then
 			local id = ply:LookupAttachment("anim_attachment_RH")
 			if !id then return end
-			local attach = ply:GetAttachment(attach_id)
+			local attach = ply:GetAttachment(id)
 			if !attach then return end
 			
 			local pos,ang = attach.Pos,attach.Ang

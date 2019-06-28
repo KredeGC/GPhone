@@ -1,6 +1,6 @@
 APP.Name	= "Photos"
 APP.Author	= "Krede"
-APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/photos.png"
+APP.Icon	= "asset://garrysmod/materials/gphone/apps/photos.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
@@ -72,8 +72,8 @@ function APP.Run( frame, w, h, ratio )
 		end
 		function wallpaper:OnClick()
 			if file.Exists(pic, "DATA") then
-				GPhone.SetData("background", "data/"..pic)
-				GPhone.DownloadImage( "data/"..pic, 512, true )
+                GPhone.SetData("background", "data/"..pic)
+                GPhone.BackgroundMat = Material("data/"..pic, "smooth")
 			end
 		end
 		
@@ -101,7 +101,6 @@ function APP.Run( frame, w, h, ratio )
 		local pics,dirs = file.Find("gphone/photos/*.jpg", "DATA")
 		
 		for i,jpg in pairs(pics) do
-			GPhone.DownloadImage( "data/gphone/photos/"..jpg )
 			timer.Simple((i-1)*0.05, function()
 				x = x + 1
 				
@@ -114,7 +113,7 @@ function APP.Run( frame, w, h, ratio )
 				but:SetSize( size, size )
 				but:SetPos( x*size - size, y*size )
 				but.pic = "gphone/photos/"..jpg
-				but.mat = GPhone.GetImage( "data/gphone/photos/"..jpg )
+				but.mat = Material( "data/gphone/photos/"..jpg )
 				function but:Paint( x, y, w, h )
 					if frame and frame.m_choose and table.HasValue(frame.m_chosen, but) then
 						draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 200, 255 ) )
@@ -212,4 +211,10 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	frame:Main()
+end
+
+function APP.Focus( frame )
+	if frame.trash then
+		frame:Main()
+	end
 end

@@ -1,7 +1,7 @@
 APP.Name		= "GTunes"
 APP.Author		= "Krede"
 APP.Negative	= true
-APP.Icon		= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/music.png"
+APP.Icon		= "asset://garrysmod/materials/gphone/apps/gtunes.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 50, 50, 50, 255 ) )

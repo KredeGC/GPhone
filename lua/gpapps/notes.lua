@@ -1,7 +1,7 @@
 APP.Name		= "Notes"
 APP.Author		= "Krede"
 APP.Negative	= true
-APP.Icon		= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/notes.png"
+APP.Icon		= "asset://garrysmod/materials/gphone/apps/notes.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 247, 244, 180, 255 ) )

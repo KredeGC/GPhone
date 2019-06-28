@@ -13,8 +13,8 @@ function APP.Run( frame, w, h, ratio )
 	function frame:OnScroll( num )
 		self.fov = math.Clamp(self.fov - num*5, 5, 100)
 	end
-	function frame:Paint( x, y, w, h )
-		local mat = GPhone.RenderCamera( frame.fov, self.front )
+    function frame:Paint( x, y, w, h )
+        local mat = GPhone.RenderCamera( frame.fov, self.front )
 		
 		surface.SetDrawColor(255, 255, 255, 255)
 		surface.SetMaterial( mat )
@@ -42,20 +42,20 @@ function APP.Run( frame, w, h, ratio )
 	
 	local photo = GPnl.AddPanel( panel )
 	photo:SetSize( size * 0.8, size * 0.8 )
-	photo:SetPos( (ls and 0 or w - size) + size * 0.1, size * 0.1 )
+    photo:SetPos( (ls and 0 or w - size) + size * 0.1, size * 0.1 )
 	function photo:Paint( x, y, w, h )
 		if self.last then
 			local s = w/GPhone.Ratio
 			surface.SetDrawColor(255, 255, 255)
-			surface.SetMaterial( GPhone.GetImage( "data/"..self.last ) )
+			surface.SetMaterial( photo.mat )
 			surface.DrawTexturedRect( 0, h/2 - s/2, w, s )
 		end
 	end
 	function photo:OnClick()
 		if !self.last then return end
-		local frame = GPhone.RunApp( "photos" )
-		if frame then
-			frame:Open( self.last, GPhone.GetImage( "data/"..self.last ) )
+		local photos = GPhone.RunApp( "photos" )
+		if photos then
+			photos:Open( self.last, photo.mat )
 		end
 	end
 	
@@ -72,7 +72,19 @@ function APP.Run( frame, w, h, ratio )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
 	function screenshot:OnClick()
-		surface.PlaySound("npc/scanner/scanner_photo1.wav")
+        surface.PlaySound("npc/scanner/scanner_photo1.wav")
+        
+        --[[local dlight = DynamicLight( ent:EntIndex() )
+        if dlight then
+            dlight.Pos = vOffset
+            dlight.r = 255
+            dlight.g = 255
+            dlight.b = 255
+            dlight.Brightness = 10
+            dlight.Size = 512
+            dlight.DieTime = CurTime() + 0.02
+            dlight.Decay = 512
+        end]]
 		
 		file.CreateDir("gphone/photos")
 		
@@ -89,7 +101,8 @@ function APP.Run( frame, w, h, ratio )
 			local name = os.time()..".jpg"
 			file.Write("gphone/photos/"..name, data)
 			GPhone.DownloadImage( "data/gphone/photos/"..name )
-			photo.last = "gphone/photos/"..name
+            photo.last = "gphone/photos/"..name
+            photo.mat = Material("data/"..photo.last, "smooth")
 		end)
 	end
 	

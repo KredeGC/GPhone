@@ -210,7 +210,8 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Reload()
-	local ct = CurTime()
+	if CLIENT then return end
+	local ct = SysTime()
 	if (self.b_lastreload or 0) + 0.5 < ct then
 		self.b_lastreload = ct
 		net.Start("GPhone_Rotate")
@@ -246,7 +247,7 @@ local function clickApp( x, y )
 	for k,data in pairs(GPhone.GetPage()) do
 		local posx,posy,size,appid = data.x,data.y,data.size,data.app
 		
-		if x >= posx and x <= posx + size and y >= posy and y <= posy + size then
+		if x > posx and x < posx + size and y > posy and y < posy + size then
 			local res = GPhone.FocusApp( appid )
 			if !res then
 				GPhone.RunApp( appid )
@@ -393,7 +394,9 @@ function SWEP:Think()
 			elseif GPhone.CurrentFrame then -- Double-clicking in app
 				clickFrame( GPhone.CurrentFrame, x, y, true )
 				self.b_override = true
-				self.b_downtime = ct + 0.25
+                self.b_downtime = ct + 0.25
+                self.cursor_lastx = x
+                self.cursor_lasty = y
 			end
 		elseif !input.IsMouseDown( MOUSE_LEFT ) and self.b_leftdown then -- Mouse release
 			self.b_leftdown = nil
@@ -412,9 +415,13 @@ function SWEP:Think()
 						self.b_quickopen = nil
 						self.b_quickhold = nil
 						self.b_downtime = ct + 0.25
+                        self.cursor_lastx = x
+                        self.cursor_lasty = y
 					else
 						clickFrame( self.QuickMenu, x, y )
 						self.b_downtime = ct + 0.25
+                        self.cursor_lastx = x
+                        self.cursor_lasty = y
 					end
 					return
 				end
@@ -422,6 +429,8 @@ function SWEP:Think()
 			
 			if self.b_override then return end
 			self.b_downtime = ct + 0.25
+            self.cursor_lastx = x
+            self.cursor_lasty = y
 			
 			if GPhone.GetInputText() then -- Close text input
 				GPhone.CloseInput()
@@ -507,12 +516,8 @@ function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
 	self.ToggleDelay = SysTime() + 0.3
 	
-	if CLIENT then
-		GPhone.DownloadImage( GPhone.Data.background, 512, "background-color: #FFF" )
-		
-		for k,app in pairs(GPhone.GetApps()) do
-			GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
-		end
+    if CLIENT then
+        GPhone.LoadImages()
 		
 		local ratio = GPhone.Resolution
 		
@@ -776,6 +781,16 @@ function SWEP:Holster( wep )
 				vm:ManipulateBoneAngles(bone, Angle(0,0,0))
 			end
 		end
+		
+		timer.Simple(0.1, function()
+			if IsValid(vm) then
+				for bone = 0, vm:GetBoneCount() do
+					vm:ManipulateBoneScale(bone, Vector(1, 1, 1))
+					vm:ManipulateBonePosition(bone, Vector(0,0,0))
+					vm:ManipulateBoneAngles(bone, Angle(0,0,0))
+				end
+			end
+		end)
 	end
 	
 	return true
@@ -828,8 +843,8 @@ SWEP.ScreenInfo = {
 		if GPhone.AppScreen and GPhone.AppScreen.Enabled then
 			hook.Run("GPhonePreRenderBackground", w, h)
 			
-			local mat = GPhone.GetImage( GPhone.Data.background )
-			local rw,rh = mat:GetFloat("$realwidth") or 56, mat:GetFloat("$realheight") or 83
+			local mat = GPhone.BackgroundMat
+			local rw,rh = mat:GetFloat("$realwidth") or mat:Width(), mat:GetFloat("$realheight") or mat:Height()
 			local rt = rw / rh
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial( mat )
@@ -841,12 +856,12 @@ SWEP.ScreenInfo = {
 				surface.DrawTexturedRect(w/2 - s/2, 0, s, h)
 			end
 			
+			hook.Run("GPhonePostRenderBackground", w, h)
+			
 			local blur = GetConVar("gphone_blur")
 			if blur and blur:GetBool() then
 				render.BlurRenderTarget( render.GetRenderTarget(), 6, 4, 8 )
 			end
-			
-			hook.Run("GPhonePostRenderBackground", w, h)
 			
 			local appscr = GPhone.AppScreen
 			local space,scale = 0,appscr.Scale
@@ -959,7 +974,7 @@ SWEP.ScreenInfo = {
 		else
 			hook.Run("GPhonePreRenderBackground", w, h)
 			
-			local mat = GPhone.GetImage( GPhone.Data.background )
+			local mat = GPhone.BackgroundMat
 			local rw,rh = mat:GetFloat("$realwidth") or mat:Width(), mat:GetFloat("$realheight") or mat:Height()
 			local rt = rw / rh
 			surface.SetDrawColor(255, 255, 255, 255)
@@ -1271,7 +1286,7 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 			local x,y = GPhone.GetCursorPos()
 			local app = GPhone.GetApp( GPhone.CurrentApp )
 			local frame = GPhone.Panels[GPhone.CurrentApp]
-			local fullscreen = (!app or frame and frame.b_fullscreen) and !GPhone.AppScreen.Enabled
+			local fullscreen = (!app or frame and frame.b_fullscreen)
 			
 			render.SetViewPort(w*0.016, h*0.016, oldw, oldh)
 			
@@ -1382,13 +1397,13 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 			if GPhone.CursorEnabled then
 				local ct = CurTime()
 				if (wep.b_downtime or 0) > ct then
-					local p = (wep.b_downtime - ct)*4
+					local p = (wep.b_downtime - ct) * 4
 					local cv = GetConVar("gphone_cursorsize")
-					local size = math.Round((1-p)*1.5*(cv and cv:GetFloat() or 60))
+					local size = math.Round((1 - p) * 1.5 * (cv and cv:GetFloat() or 60))
 					
-					surface.SetDrawColor(255, 255, 255, p*255)
+					surface.SetDrawColor(255, 255, 255, p * 255)
 					surface.SetTexture(surface.GetTextureID("effects/select_ring"))
-					surface.DrawTexturedRect(x - size/2, y - size/2, size, size)
+					surface.DrawTexturedRect(wep.cursor_lastx - size/2, wep.cursor_lasty - size/2, size, size)
 				end
 			end
 			
@@ -1399,12 +1414,39 @@ hook.Add("RenderScene", "GPhoneRenderPhoneRT", function(origin, angles, fov)
 end)
 
 
+local devcon = GetConVar("developer")
 local lmbmat = Material("gphone/icons/lmb.png")
 local rmbmat = Material("gphone/icons/rmb.png")
 local infmat = Material("gphone/icons/hint.png")
 local scrmat = Material("gphone/icons/scroll.png")
 
 function SWEP:DrawHUD()
+    if devcon:GetBool() then
+        surface.SetDrawColor(255, 255, 255)
+        surface.SetMaterial( GPhone.PhoneMT )
+        if GPhone.Landscape then
+            surface.DrawTexturedRectRotated(830 / 2, 560 / 2, 560, 830, 90)
+        else
+            surface.DrawTexturedRect(0, 0, 560, 830)
+        end
+        
+        surface.SetDrawColor( Color(0, 0, 0, 255) )
+		surface.DrawRect( self.ScreenInfo.home.x / 2, self.ScreenInfo.home.y / 2, self.ScreenInfo.home.size / 2, self.ScreenInfo.home.size / 2 )
+        
+        if GPhone.CursorEnabled then
+            local col = LocalPlayer():GetWeaponColor()
+            local x,y = GPhone.CursorPos.x / 2,GPhone.CursorPos.y / 2
+            local cv = GetConVar("gphone_cursorsize")
+            local size = math.Round(cv and cv:GetFloat() or 60) / 2
+            local cmat = GetConVar("gphone_cursormat")
+            local mat = GPhone.GetInputText() and "gphone/text" or cmat and cmat:GetString() or "effects/select_dot"
+            
+            surface.SetDrawColor(col.x * 255, col.y * 255, col.z * 255, 255)
+            surface.SetTexture( surface.GetTextureID( mat ) )
+            surface.DrawTexturedRectRotated(x, y, size, size, GPhone.Landscape and -90 or 0)
+        end
+    end
+	
 	local cv = GetConVar("gphone_hints")
 	if cv and cv:GetBool() then
 		surface.SetDrawColor( 10, 10, 10, 200 )
@@ -1421,6 +1463,7 @@ function SWEP:DrawHUD()
 			surface.DrawTexturedRect( ScrW()/2-16, ScrH() - 80, 32, 32 )
 			
 			draw.SimpleText("Right-click to toggle focus on the phone", "GPSmall", ScrW()/2, ScrH() - 54, Color(255,255,255), TEXT_ALIGN_CENTER)
+			draw.SimpleText("Press reload to rotate the phone", "GPSmall", ScrW()/2, ScrH() - 32, Color(255,255,255), TEXT_ALIGN_CENTER)
 		elseif GPhone.GetInputText() then
 			surface.SetDrawColor( 255, 255, 255, 255 )
 			surface.SetMaterial( infmat )
@@ -1433,7 +1476,7 @@ function SWEP:DrawHUD()
 			surface.SetMaterial( lmbmat )
 			surface.DrawTexturedRect( ScrW()/2-16, ScrH() - 80, 32, 32 )
 			
-			draw.SimpleText("Release left-click on any app to swap them", "GPSmall", ScrW()/2, ScrH() - 54, Color(255,255,255), TEXT_ALIGN_CENTER)
+			draw.SimpleText("Release left-click on any app to swap places", "GPSmall", ScrW()/2, ScrH() - 54, Color(255,255,255), TEXT_ALIGN_CENTER)
 		elseif GPhone.MoveMode then
 			surface.SetDrawColor( 255, 255, 255, 255 )
 			surface.SetMaterial( lmbmat )
@@ -1460,7 +1503,7 @@ function SWEP:DrawHUD()
 			surface.SetMaterial( lmbmat )
 			surface.DrawTexturedRect( ScrW()/2-16, ScrH() - 80, 32, 32 )
 			
-			draw.SimpleText("Left-click on an app to run it", "GPSmall", ScrW()/2, ScrH() - 54, Color(255,255,255), TEXT_ALIGN_CENTER)
+			draw.SimpleText("Left-click on an app to open it", "GPSmall", ScrW()/2, ScrH() - 54, Color(255,255,255), TEXT_ALIGN_CENTER)
 			draw.SimpleText("Hold left-click to edit the screen", "GPSmall", ScrW()/2, ScrH() - 32, Color(255,255,255), TEXT_ALIGN_CENTER)
 		end
 	end
@@ -1473,7 +1516,7 @@ function SWEP:DrawWeaponSelection( x, y, wide, tall, alpha )
 	x = x + 10
 	wide = wide - 20
 	tall = tall - 20
-	alpha = (alpha-191)/64*255
+	alpha = (alpha - 191) / 64 * 255
 	
 	local cv = GetConVar("gphone_wepicon")
 	if cv and cv:GetBool() then

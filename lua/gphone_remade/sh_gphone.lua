@@ -1,4 +1,4 @@
-CreateConVar("gphone_csapp", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links")
+CreateConVar("gphone_csapp", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Allow players to download apps via links and the online AppStore")
 CreateConVar("gphone_sync", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Synchronize players data with singleplayer")
 
 GPDefaultApps = {"appstore", "settings", "camera", "photos", "gtunes"}
@@ -9,7 +9,7 @@ GPDefaultData = {
 			music = {"sound/music/hl1_song25_remix3.mp3"}
 		}
 	},
-	background = "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg"
+	background = "materials/gphone/backgrounds/sky.jpg"
 }
 
 file.CreateDir("gphone/users")
@@ -19,18 +19,16 @@ if CLIENT then
 end
 
 local function loadApps()
-	if SERVER then
-		print("[GPhone] Adding serverside apps")
-	end
+	print("[GPhone] Adding serverside apps")
 	
 	local files = file.Find("gpapps/*.lua", "LUA")
 	local added = 0
 	for _,v in pairs(files) do
+		local name = string.sub(v, 0, string.len(v) - 4)
 		if SERVER then
 			AddCSLuaFile("gpapps/"..v)
+			added = added + 1
 		else
-			local name = string.sub(v, 0, string.len(v) - 4)
-			
 			APP = {}
 			local r = file.Read("gpapps/"..v, "LUA")
 			RunString(r, v)
@@ -39,17 +37,31 @@ local function loadApps()
 			if res then
 				added = added + 1
 			else
-				print("[GPhone] Could not add app '"..name.."', possibly missing Name")
+				print("[GPhone] Could not add serverside app '"..name.."', possibly missing Name")
 			end
 			
 			APP = nil
 		end
 	end
 	
+	if added == 0 then
+		if CLIENT and game.SinglePlayer() then
+			GPhone.Debug("[GPhone] Could not load any serverside apps in singleplayer. Apps might not be available on the phone", false ,true)
+		elseif CLIENT then
+			GPhone.Debug("[GPhone] Could not load any serverside apps. Apps might not be available on the phone", false, true)
+		else
+			print("[GPhone] Server could not load any apps")
+		end
+	elseif SERVER then
+		print("[GPhone] Added "..added.." serverside apps")
+	end
+	
 	if CLIENT then
 		print("[GPhone] Added "..added.." serverside apps")
 		
 		if GetConVar("gphone_csapp"):GetBool() then
+			print("[GPhone] Adding clientside apps")
+			
 			local files = file.Find("gphone/apps/*.txt", "DATA")
 			local added = 0
 			for _,v in pairs(files) do
@@ -63,7 +75,7 @@ local function loadApps()
 				if res then
 					added = added + 1
 				else
-					print("[GPhone] Could not add app '"..name.."', possibly missing Name")
+					print("[GPhone] Could not add clientside app '"..name.."', possibly missing Name")
 				end
 				
 				APP = nil
@@ -74,9 +86,14 @@ local function loadApps()
 	end
 end
 
-hook.Add("Initialize", "GPhoneInitialize", function()
-	loadApps()
-end)
+-- One idea why Apps might not appear could be because AddCSLuaFile is called after initialize. Needs testing though
+loadApps()
+
+--[[hook.Add("Initialize", "GPhoneInitialize", function()
+	if CLIENT then -- No need to initialize twice
+		loadApps()
+	end
+end)]]
 
 local selfietranslate = {}
 selfietranslate[ ACT_MP_STAND_IDLE ] 		= ACT_HL2MP_IDLE_PISTOL

@@ -12,7 +12,8 @@ if !GPhone then
 	GPhone.HTML				= {}
 	GPhone.Log				= {}
 	GPhone.Apps				= {}
-	
+    
+    GPhone.BackgroundMat    = nil
 	GPhone.CurrentApp		= nil
 	GPhone.CurrentFrame		= nil
 	GPhone.MovingApp		= nil
@@ -45,7 +46,7 @@ if !GPhone then
 	}
 	
 	local w,h = math.floor(GPhone.Width*1.032),math.floor(GPhone.Height*1.032)
-	
+    
 	GPhone.PhoneRT = GetRenderTarget("GPScreenRT_"..math.ceil(GPhone.Height), w, h, false)
 	GPhone.PhoneLSRT = GetRenderTarget("GPScreenLSRT_"..math.ceil(GPhone.Height), h, w, false)
 	GPhone.PhoneMT = CreateMaterial(
@@ -59,15 +60,15 @@ if !GPhone then
 		}
 	)
 	
-	GPhone.CamRT = GetRenderTarget("GPCameraRT_"..math.ceil(GPhone.Height), w, h, false)
-	GPhone.CamLSRT = GetRenderTarget("GPCameraLSRT_"..math.ceil(GPhone.Height), h, w, false)
+	GPhone.CamRT = GetRenderTarget("GPCameraRT_"..math.ceil(GPhone.Height), GPhone.Width, GPhone.Height, false)
+	GPhone.CamLSRT = GetRenderTarget("GPCameraLSRT_"..math.ceil(GPhone.Height), GPhone.Height, GPhone.Width, false)
 	GPhone.CamMT = CreateMaterial(
 		"GPCameraMT_"..math.ceil(GPhone.Height),
 		"GMODScreenspace",
 		{
 			["$basetexture"] = GPhone.CamRT,
 			["$basetexturetransform"] = "center .5 .5 scale -1 -1 rotate 0 translate 0 0",
-			["$texturealpha"] = 0,
+			["$vertexcolor"] = 1,
 			["$vertexalpha"] = 1,
 		}
 	)
@@ -257,6 +258,8 @@ surface.CreateFont("GPBugReport", { font = "Open Sans", size = 48 * GPhone.Resol
 
 surface.CreateFont("GPLoading", { font = "Open Sans", size = 128, additive = false, shadow = false})
 
+surface.CreateFont("GPAppBuilder", { font = "Open Sans", size = 30, additive = false, shadow = false})
+
 
 concommand.Add("gphone_log_wipe", function()
 	GPhone.WipeLog()
@@ -432,8 +435,6 @@ concommand.Add("gphone_reset", function()
 		net.Start("GPhone_Reset")
 		net.SendToServer()
 	end
-	
-	GPhone.DownloadImage( "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg", 512, "background-color: #FFF" )
 end)
 
 
@@ -471,17 +472,18 @@ net.Receive("GPhone_Share_Data", function(len)
 	local name = net.ReadString()
 	local data = net.ReadTable()
 	
-	local override = hook.Run("GPhoneDataReceived", ply, name, data)
-	if !override then
-		local shared = GPhone.GetData("shared", {})
-		shared[name] = data
-		GPhone.SetData("shared", shared)
-	end
+	local hookOverride = hook.Run("GPhoneDataReceived", ply, name, data)
+	if hookOverride then return end
 	
 	local func = GPhone.SharedHooks[name]
 	if func then
-		GPhone.DebugFunction( func, ply, name, data )
+		local funcOverride = GPhone.DebugFunction( func, ply, name, data )
+		if funcOverride then return end
 	end
+	
+	local shared = GPhone.GetData("shared", {})
+	shared[name] = data
+	GPhone.SetData("shared", shared)
 end)
 
 net.Receive("GPhone_Rotate", function(len)
@@ -499,6 +501,20 @@ net.Receive("GPhone_VoiceCall_Stop", function(len) -- Someone denied your voice 
 end)
 
 
+function GPhone.LoadImages()
+    local background = GPhone.Data.background
+    if string.StartWith(background, "http://") or string.StartWith(background, "https://") or background == "" or background == "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/background.jpg" then
+        GPhone.SetData("background", "materials/gphone/backgrounds/sky.jpg")
+    end
+    
+    GPhone.BackgroundMat = Material(background, "smooth")
+    
+    for k,app in pairs(GPhone.GetApps()) do
+        GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
+    end
+end
+
+
 function GPhone.DebugFunction( func, ... )
 	local function catch(err)
 		local info = debug.getinfo( func )
@@ -510,7 +526,7 @@ end
 
 function GPhone.Debug( str, spam, err )
 	local last = GPhone.Log[#GPhone.Log]
-	if spam or last != str then -- Prevent spam
+	if spam or last != str then -- Prevent spammed messages
 		table.insert(GPhone.Log, str)
 		if err then
 			ErrorNoHalt( str.."\n" )
@@ -601,7 +617,7 @@ function GPhone.HookSharedData(name, func)
 end
 
 function GPhone.SendSharedData(ply, name, data)
-	if IsValid(ply) and ply:IsPlayer() then
+	if IsValid(ply) and ply:IsPlayer() and ply != LocalPlayer() then
 		net.Start( "GPhone_Share_Data" )
 			net.WriteEntity( ply )
 			net.WriteString( name )
@@ -890,7 +906,7 @@ function GPhone.DownloadApp( url )
 		
 		GPhone.AddApp(name, APP)
 		
-		GPhone.DownloadImage( APP.Icon, 128, true, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
+		GPhone.DownloadImage( APP.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
 		
 		APP = nil
 		
@@ -1226,6 +1242,8 @@ function GPhone.UpdateHTMLControl( html )
 		if string.find(str or "", "Uncaught ReferenceError: gmod is not defined") then
 			print("[ERROR] '"..tostring(html).."': "..str)
 			GPhone.UpdateHTMLControl( html )
+        elseif str then
+			print("[GPhone HTML] "..str)
 		end
 	end
 	
@@ -1245,7 +1263,7 @@ function GPhone.UpdateHTMLControl( html )
 			end
 			local function onEnter( val )
 				if IsValid(html) then
-					if string.StartWith(html.URL, "https://www.google.com") then // Why are javascript events so confusing to hack together?
+					if string.StartWith(html.URL, "https://www.google.com") then -- Why are javascript events so confusing to hack together?
 						html:OpenURL("https://www.google.com/search?q="..string.gsub(val, " ", "+"))
 					elseif tag and id then
 						local js = [[var el = document.getElementsByTagName("]]..tag..[[")[]]..id..[[];
@@ -1337,7 +1355,7 @@ function GPhone.UpdateHTMLControl( html )
 					<img src="https://raw.githubusercontent.com/KredeGC/GPhone/master/tutorial/chromium.png" width="100%" />
 					<p>This can be done by right-clicking Garry's Mod in your Steam Library and selecting properties.
 					<br>In the properties-window, navigate to the 'BETAS' tab and select 'chromium -' from the dropdown.</p>
-					<p>If you <b>DON'T</b> want to switch to Chromium, click <a style="color: #ffffff; text-decoration: none;" href="javascript:gmod.run('this:GoBack() this.Title=\'Google\' RunConsoleCommand(\'gphone_chromium\', 0)');">here</a> to turn off this notification and go back.</p>
+					<p>If you <b>DON'T</b> want to switch to Chromium, click <a style="color: #ffffff; text-decoration: none;" href="javascript:gmod.run('this:GoBack() this.Title=\'Google\' RunConsoleCommand(\'gphone_chromium\', 0)');">here</a> to turn off this notification and continue.</p>
 				</body>
 			</html>]])
 		end
@@ -1407,7 +1425,7 @@ function GPhone.PerformHTMLClick( html, x, y )
 		elem.focus();
 		
 		function pressParents( el ) {
-			if (el.tagName == "INPUT" && el.type == "text") {
+			if (el.tagName == "INPUT" && (el.type == "text" || el.type == "password")) {
 				var x = document.getElementsByTagName(el.tagName);
 				for (i = 0; i < x.length; i++) {
 					if (x[i] == el) {
@@ -1425,10 +1443,14 @@ function GPhone.PerformHTMLClick( html, x, y )
 						gmod.redirect(window.location.hostname + "/" + el.href);
 					}
 				}
-			} else if (el.click) {
-				el.click();
-			} else if (el.onclick) {
-				el.onclick();
+			} else if (el.click || el.onclick || el.onClick) {
+				if (el.fireEvent) {
+                    el.fireEvent('onclick');
+                } else {
+                    var event = document.createEvent('Events');
+                    event.initEvent('click', true, false);
+                    el.dispatchEvent(event);
+                }
 			} else if (el.tagName == "A") {
 				if (el.href) {
 					if (el.href.search("javascript:") > -1) {
@@ -1444,7 +1466,8 @@ function GPhone.PerformHTMLClick( html, x, y )
 			} else if (el.parentElement) {
 				pressParents( el.parentElement );
 			}
-		}
+        }
+        
 		pressParents( elem )
 	]])
 	return true
@@ -1460,7 +1483,9 @@ function GPhone.StartMusic( id )
 	if string.StartWith(id, "http://") or string.StartWith(id, "https://") then
 		if string.find(id, "youtube.com") then
 			local frame = GPhone.RunApp( "furfox" )
-			frame:OpenURL( id )
+			if frame then
+				frame:OpenURL( id )
+			end
 			GPhone.CloseInput()
 		else
 			sound.PlayURL(GPhone.MusicURL, "noplay noblock", function(channel)
@@ -1564,16 +1589,9 @@ function GPhone.DownloadImage( url, size, style )
 		function(err)
 			print("[GPhone] "..err)
 		end)
-	else
-		table.insert(GPhone.ImageHistory, data)
-		if string.EndsWith(url, ".png") or string.EndsWith(url, ".jpg") or string.EndsWith(url, ".jpeg") then -- Local files
-			GPhone.ImageCache[url] = Material(url, "smooth")
-		else
-			GPhone.ImageCache[url] = Material(url)
-		end
-		if !GPhone.ImageCache[url] or GPhone.ImageCache[url]:IsError() then
-			GPhone.ImageCache[url] = genicon
-		end
+    else
+        table.insert(GPhone.ImageHistory, data)
+        table.insert(GPhone.ImageQueue, data)
 	end
 	return true
 end

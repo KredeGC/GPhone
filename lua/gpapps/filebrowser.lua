@@ -1,7 +1,7 @@
 APP.Name		= "FileManager"
 APP.Author		= "Krede"
 APP.Negative	= false
-APP.Icon 		= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/contacts.png"
+APP.Icon 		= "asset://garrysmod/materials/gphone/apps/contacts.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220 ) )

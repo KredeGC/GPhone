@@ -1,6 +1,6 @@
 APP.Name	= "HL2 Go"
 APP.Author	= "Krede"
-APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/hlgo.png"
+APP.Icon	= "asset://garrysmod/materials/gphone/apps/hlgo.png"
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h

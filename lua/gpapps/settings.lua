@@ -1,6 +1,6 @@
 APP.Name	= "Settings"
 APP.Author	= "Krede"
-APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/settings.png"
+APP.Icon	= "asset://garrysmod/materials/gphone/apps/settings.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
@@ -204,31 +204,10 @@ function APP.Run( frame, w, h, ratio )
 	local wallpaper = GPnl.AddPanel( scroll, "textentry" )
 	wallpaper:SetSize( w, 64 * ratio )
 	wallpaper:SetPos( 0, space )
-	function wallpaper:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
-		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
-		
-		local text = self.b_typing and GPhone.GetInputText()
-		if text then
-			if text == "" then
-				draw.SimpleText("...", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-			else
-				surface.SetFont("GPMedium")
-				local size = surface.GetTextSize(text)
-				
-				if size > w - mar*2 then
-					draw.SimpleText(text, "GPMedium", w - mar, h/2, Color(70, 70, 70), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-				else
-					draw.SimpleText(text, "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				end
-			end
-		else
-			draw.SimpleText("Change Wallpaper", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-		end
-	end
-	function wallpaper:OnEnter( val )
-		GPhone.SetData("background", val)
-		GPhone.DownloadImage( val, 512, true )
+	wallpaper:SetText( "Change wallpaper" )
+	function wallpaper:OnEnter( path )
+        GPhone.SetData("background", path)
+        GPhone.BackgroundMat = Material(path, "smooth")
 	end
 	
 	local header = GPnl.AddPanel( appearance )

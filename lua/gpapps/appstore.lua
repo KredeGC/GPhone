@@ -1,13 +1,168 @@
 APP.Name	= "AppStore"
 APP.Author	= "Krede"
-APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/appstore.png"
+APP.Icon	= "asset://garrysmod/materials/gphone/apps/appstore.png"
 function APP.Run( frame, w, h, ratio )
 	function frame:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color(220, 220, 220, 255) )
 	end
 	
-	frame.title = "AppStore"
+	frame.page = nil
+	frame.title = "Local Apps"
 	frame.online = {}
+	
+	local function loadAppPage( name, app, click )
+		frame.b_hover = nil
+		frame.title = app.Name
+		local page = GPnl.AddPanel( frame, "panel" )
+		page:SetPos( 0, 64 * ratio )
+		page:SetSize( w, h - 128 * ratio )
+		page.App = name
+		page.Name = app.Name
+		page.Author = app.Author
+		frame.page = page
+		function page:Paint( x, y, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 255 ) )
+			draw.RoundedBox( 0, 0, 144 * ratio, w, 2, Color(80, 80, 80, 255) )
+			
+			draw.SimpleText(self.Name, "GPTitle", 144 * ratio, 24 * ratio, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText("By "..(self.Author or "N/A"), "GPMedium", 144 * ratio, 72 * ratio, Color(160, 160, 160), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		end
+		
+		if app.Rating then
+			local rating = GPnl.AddPanel( page )
+			rating:SetSize( 24 * 5 * ratio, 24 * ratio )
+			rating:SetPos( 144 * ratio, 108 * ratio )
+			rating.Rating = app.Rating
+			rating.App = app.App
+			rating.Id = app.Id
+			function rating:Paint( x, y, w, h )
+				local mx,my = GPhone.GetCursorPos()
+				local votes = self.Rating
+				
+				if mx >= x and my >= y and mx <= x + w and my <= y + h then
+					votes = math.Clamp( math.ceil( (mx - x) / w * 5 ), 1, 5 )
+				end
+				
+				local rate = votes / 5
+				local last = math.floor(votes)
+				
+				surface.SetDrawColor( 255 * (1 - rate), 255 * rate, 0 )
+				surface.SetTexture( surface.GetTextureID("gphone/dot_empty") )
+				
+				for i = 0, 4 do
+					surface.DrawTexturedRect( i * h, 0, h, h )
+				end
+				
+				surface.SetTexture( surface.GetTextureID("gphone/dot_full") )
+				for i = 0, last do
+					if i == last then
+						local p = votes - last
+						surface.DrawTexturedRectUV( i * h, 0, h * p, h, 0, 0, p, 1 )
+					else
+						surface.DrawTexturedRect( i * h, 0, h, h )
+					end
+				end
+			end
+			function rating:OnClick()
+				local x = GPhone.RootToLocal( self, GPhone.GetCursorPos() )
+				local rate = math.Clamp( math.ceil( x / self:GetWidth() * 5 ), 1, 5 )
+				
+				http.Post("http://gphone.icu/api/vote",
+					{
+						id = self.Id,
+						app = self.App,
+						vote = tostring(rate)
+					},
+					function( body, len, headers, code )
+						print("[GPhone] "..body)
+					end,
+					function( err )
+						print("[GPhone] "..err)
+						return false
+					end
+				)
+			end
+		end
+		
+		local icon = GPnl.AddPanel( page )
+		icon:SetSize( 128 * ratio, 128 * ratio )
+		icon:SetPos( 8 * ratio, 8 * ratio )
+		icon.Icon = app.Icon
+		function icon:Paint( x, y, w, h )
+			surface.SetDrawColor( 255, 255, 255 )
+			surface.SetMaterial( GPhone.GetImage( self.Icon ) )
+			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		
+		local install = GPnl.AddPanel( page )
+		install:SetSize( 120 * ratio, 40 * ratio )
+		install:SetPos( w - (120 + 25) * ratio, 52 * ratio )
+		function install:Paint( x, y, w, h )
+			draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
+			draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
+			local text = table.HasValue(GPhone.Data.apps, page.App) and "Uninstall" or "Install"
+			draw.SimpleText(text, "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		function install:OnClick()
+			click( page, self )
+		end
+		
+		if app.Id then
+			local author = GPnl.AddPanel( page )
+			author:SetSize( w - 16 * ratio, 40 * ratio )
+			author:SetPos( 8 * ratio, (128 + 26) * ratio )
+			function author:Paint( x, y, w, h )
+				draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
+				draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
+				draw.SimpleText("View author", "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+			function author:OnClick()
+				gui.OpenURL("https://steamcommunity.com/profiles/"..app.Id)
+			end
+			
+			local view = GPnl.AddPanel( page )
+			view:SetSize( w - 16 * ratio, 40 * ratio )
+			view:SetPos( 8 * ratio, (128 + 74) * ratio )
+			function view:Paint( x, y, w, h )
+				draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
+				draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
+				draw.SimpleText("View code", "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+			function view:OnClick()
+				local f = vgui.Create( "DFrame" )
+				f:SetSize(ScrW() * 0.7, ScrH() * 0.7)
+				f:SetTitle("")
+				f:SetDraggable( false )
+				f:ShowCloseButton( true )
+				f:SetSizable( false )
+				f:MakePopup()
+				f:Center()
+				function f:Paint(w, h)
+					surface.SetDrawColor(255, 255, 255)
+					surface.DrawRect(0, 0, w, h)
+					draw.SimpleText("Sourcecode for "..app.Name.." by "..app.Author, "GPAppBuilder", 0, 0, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				end
+				
+				local code = vgui.Create("DTextEntry", f)
+				code:SetText( "" )
+				code:Dock( FILL )
+				code:SetVerticalScrollbarEnabled( true )
+				code:SetDrawLanguageID( false )
+				code:SetMultiline( true )
+				code:SetPlaceholderText( "Loading..." )
+				function code:AllowInput()
+					return true
+				end
+				
+				http.Fetch("http://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(body, size, headers)
+					code:SetText(string.gsub(body, "	", "    "))
+				end,
+				function(err)
+					print(err)
+				end)
+			end
+		end
+	end
 	
 	local function addbutton(name, app, click)
 		local but = GPnl.AddPanel()
@@ -21,7 +176,10 @@ function APP.Run( frame, w, h, ratio )
 			draw.RoundedBox( 0, 0, h-2, w, 2, Color(80, 80, 80, 255) )
 			
 			draw.SimpleText(self.Name, "GPMedium", h + 4, 4, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(self.Author or "N/A", "GPSmall", h + 4, h/2, Color(160, 160, 160), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText("By "..(self.Author or "N/A"), "GPSmall", h + 4, h/2, Color(160, 160, 160), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		end
+		function but:OnClick()
+			loadAppPage(name, app, click)
 		end
 		
 		local icon = GPnl.AddPanel( but )
@@ -32,6 +190,9 @@ function APP.Run( frame, w, h, ratio )
 			surface.SetDrawColor( 255, 255, 255 )
 			surface.SetMaterial( GPhone.GetImage( self.Icon ) )
 			surface.DrawTexturedRect( 0, 0, w, h )
+		end
+		function icon:OnClick()
+			loadAppPage(name, app, click)
 		end
 		
 		local install = GPnl.AddPanel( but )
@@ -283,8 +444,11 @@ function APP.Run( frame, w, h, ratio )
 	end
 	function offtab:OnClick()
 		add:SetVisible(false)
+		if frame.page then
+			frame.page:Remove()
+		end
 		frame.b_hover = self
-		frame.title = "AppStore"
+		frame.title = "Local Apps"
 		panel:OpenTab( "offline", 0.25, "in-right", "out-right" )
 	end
 	
@@ -306,9 +470,11 @@ function APP.Run( frame, w, h, ratio )
 		if GetConVar("gphone_csapp"):GetBool() then
 			add:SetVisible(true)
 		end
+		if frame.page then
+			frame.page:Remove()
+		end
 		frame.b_hover = self
-		frame.title = "Online"
-		loadOnlineApps()
+		frame.title = "Online Apps"
 		panel:OpenTab( "online", 0.25, "in-right", "out-right" )
 	end
 	
@@ -326,31 +492,73 @@ function APP.Run( frame, w, h, ratio )
 	end
 	function uptab:OnClick()
 		add:SetVisible(false)
+		if frame.page then
+			frame.page:Remove()
+		end
 		frame.b_hover = self
 		frame.title = "Updates"
-		loadUpdateApps()
 		panel:OpenTab( "updates", 0.25, "in-right", "out-right" )
 	end
 	
-	if GetConVar("gphone_csapp"):GetBool() then
-		http.Fetch("http://gphone.icu/api/list", function(body, size, headers, code)
-			local tbl = util.JSONToTable(body)
-			if type(tbl) == "table" then
-				frame.online = tbl
-				for _,app in pairs(tbl) do
-					if app.Icon then
-						GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
+	function fetchOnlineApps(force)
+		if force or GetConVar("gphone_csapp"):GetBool() then
+			http.Fetch("http://gphone.icu/api/list", function(body, size, headers, code)
+				local tbl = util.JSONToTable(body)
+				if type(tbl) == "table" then
+					frame.online = tbl
+					for _,app in pairs(tbl) do
+						if app.Icon then
+							GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
+						end
+						GPhone.UpdateApp("http://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(content)
+							app.Update = true
+						end)
 					end
-					GPhone.UpdateApp("http://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(content)
-						app.Update = true
-					end)
+					
+					loadOnlineApps()
+					loadUpdateApps()
+				else
+					print("[GPhone] Data not a table")
+				end
+			end,
+			function(err)
+				print(err)
+			end)
+		else
+			if game.SinglePlayer() or !game.IsDedicated() && LocalPlayer() == player.GetAll()[1] then
+				local info = GPnl.AddPanel( online )
+				info:SetSize( w, 160 * ratio )
+				info:SetPos( 0, online:GetHeight() / 2 - 80 * ratio )
+				function info:Paint( x, y, w, h )
+					draw.SimpleText("Downloading apps has not been enabled", "GPMedium", w/2, 0, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+					draw.SimpleText("To enable it, click the button below", "GPMedium", w/2, h/2 - 20 * ratio, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+					draw.SimpleText("You are responsible for any potentially", "GPMedium", w/2, h/2 + 20 * ratio, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+					draw.SimpleText("malicious or phishy apps you install", "GPMedium", w/2, h, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+				end
+				
+				local agree = GPnl.AddPanel( online )
+				agree:SetSize( w - 16 * ratio, 60 * ratio )
+				agree:SetPos( 8 * ratio, online:GetHeight() - 68 * ratio )
+				function agree:Paint( x, y, w, h )
+					draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
+					
+					draw.SimpleText("Agree and enable", "GPMedium", w/2, h/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+				end
+				function agree:OnClick()
+					RunConsoleCommand("gphone_csapp", "1")
+					fetchOnlineApps(true)
 				end
 			else
-				print("[GPhone] data not a table")
+				local info = GPnl.AddPanel( online )
+				info:SetSize( w, 80 * ratio )
+				info:SetPos( 0, online:GetHeight() / 2 - 40 * ratio )
+				function info:Paint( x, y, w, h )
+					draw.SimpleText("The owner of this server has disabled", "GPMedium", w/2, 0, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+					draw.SimpleText("the download and use of online apps", "GPMedium", w/2, h, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+				end
 			end
-		end,
-		function(err)
-			print(err)
-		end)
+		end
 	end
+	
+	fetchOnlineApps()
 end

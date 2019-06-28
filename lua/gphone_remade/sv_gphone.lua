@@ -75,9 +75,9 @@ hook.Add("PlayerAuthed", "GPhoneLoadClientData", function(ply, stid)
 end)
 
 hook.Add("PlayerCanHearPlayersVoice", "GPhonePlayerVoiceChat", function( p1, p2 )
-	if p1.VoiceChatter and p2.VoiceChatter and p1 != p2 then
-		return p1.VoiceChatter == p2 and p2.VoiceChatter == p1
-	elseif p1.VoiceChatter and !p2.VoiceChatter or !p1.VoiceChatter and p2.VoiceChatter then
+	if p1.GPhoneVC and p2.GPhoneVC and p1 != p2 then
+		return p1.GPhoneVC == p2 and p2.GPhoneVC == p1
+	elseif p1.GPhoneVC and !p2.GPhoneVC or !p1.GPhoneVC and p2.GPhoneVC then
 		return false
 	end
 end)
@@ -97,7 +97,14 @@ net.Receive("GPhone_Share_Data", function(len, ply)
 	local name = net.ReadString()
 	local data = net.ReadTable()
 	
+	if receiver == ply then return end
+	
+	-- Networking should be off by default as to not spam the user
+	
+	-- Add a blacklist so people won't be spammed
 	-- if receiver.GPBlacklist[ply] then return end
+	
+	-- Add as an option for travel-time effect
 	-- timer.Simple(receiver.GPConnection + ply.GPConnection, function() end)
 	
 	net.Start( "GPhone_Share_Data" )
@@ -133,7 +140,7 @@ net.Receive("GPhone_VoiceCall_Request", function(len, ply)
 	local chatter = net.ReadEntity()
 	if !IsValid(chatter) or !chatter:IsPlayer() or chatter == ply then return end
 	
-	ply.VoiceChatter = chatter
+	ply.GPhoneVC = chatter
 	
 	net.Start( "GPhone_VoiceCall_Request" )
 		net.WriteEntity( ply )
@@ -143,27 +150,27 @@ end)
 net.Receive("GPhone_VoiceCall_Answer", function(len, ply)
 	local chatter = net.ReadEntity()
 	local accept = net.ReadBool()
-	if !IsValid(chatter) or !chatter:IsPlayer() or chatter == ply or chatter.VoiceChatter != ply then return end
+	if !IsValid(chatter) or !chatter:IsPlayer() or chatter == ply or chatter.GPhoneVC != ply then return end
 	
 	if accept then
-		ply.VoiceChatter = chatter
+		ply.GPhoneVC = chatter
 	else
-		chatter.VoiceChatter = false
+		chatter.GPhoneVC = false
 		net.Start( "GPhone_VoiceCall_Stop" )
-		net.Send(chatter)
+		net.Send( chatter )
 	end
+end)
+
+net.Receive("GPhone_VoiceCall_Stop", function(len, ply)
+	local chatter = ply.GPhoneVC
+	if IsValid(chatter) and chatter:IsPlayer() and chatter != ply and chatter.GPhoneVC == ply then
+		chatter.GPhoneVC = false
+	end
+	
+	ply.GPhoneVC = false
 end)
 
 net.Receive("GPhone_Selfie", function(len, ply)
 	local bool = net.ReadBool()
 	ply:SetNWBool("GPSelfie", bool)
-end)
-
-net.Receive("GPhone_VoiceCall_Stop", function(len, ply)
-	local chatter = ply.VoiceChatter
-	if IsValid(chatter) and chatter:IsPlayer() and chatter != ply and chatter.VoiceChatter == ply then
-		chatter.VoiceChatter = false
-	end
-	
-	ply.VoiceChatter = false
 end)
