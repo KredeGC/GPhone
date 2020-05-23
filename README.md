@@ -1,4 +1,4 @@
-[![gphone](http://gphone.icu//api/count)](http://gphone.icu)
+[![gphone](https://gphone.icu/api/count)](http://gphone.icu)
 
 # GPhone
 "Are you tired of having to equip your camera every time you want to take a picture?
