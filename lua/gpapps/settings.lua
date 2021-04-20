@@ -6,10 +6,13 @@ function APP.Run( frame, w, h, ratio )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
 	end
 	
-	local mar = (64 - 36) * ratio
+	local mar = (64 - 36) / 2 * ratio
 	
 	local main = frame:AddTab( "home", "panel" )
-	local space = 12 * ratio
+    local space = 12 * ratio
+    
+	local pad = 8 * ratio
+	local size = 64 * ratio - pad * 2
 	
 	local scroll = GPnl.AddPanel( main, "scroll" )
 	scroll:SetPos( 0, 64 * ratio )
@@ -46,7 +49,7 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	space = space + 64 * ratio
-		
+	
 	local storagetab = GPnl.AddPanel( scroll )
 	storagetab:SetSize( w, 64 * ratio )
 	storagetab:SetPos( 0, space )
@@ -75,6 +78,21 @@ function APP.Run( frame, w, h, ratio )
 	end
 	function debugtab:OnClick()
 		frame:OpenTab( "debug", 0.25, "in-right", "out-left" )
+	end
+	
+	space = space + 64 * ratio
+	
+	local systemtab = GPnl.AddPanel( scroll )
+	systemtab:SetSize( w, 64 * ratio )
+	systemtab:SetPos( 0, space )
+	function systemtab:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("System", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+	function systemtab:OnClick()
+		frame:OpenTab( "system", 0.25, "in-right", "out-left" )
 	end
 	
 	space = space + 64 * ratio
@@ -113,17 +131,23 @@ function APP.Run( frame, w, h, ratio )
 	scroll:SetPos( 0, 64 * ratio )
 	scroll:SetSize( w, h - 64 * ratio )
 	
-	local hold = GPnl.AddPanel( scroll, "textentry" )
-	hold:SetSize( w, 64 * ratio )
-	hold:SetPos( 0, space )
-	hold:SetText( math.Round(GetConVar("gphone_holdtime"):GetFloat(), 2) )
-	function hold:Paint( x, y, w, h )
+	local holdlabel = GPnl.AddPanel( scroll, "panel" )
+	holdlabel:SetSize( w, 64 * ratio )
+	holdlabel:SetPos( 0, space )
+	function holdlabel:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 		
-		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
-		draw.SimpleText("Hold time: "..text, self:GetFont(), mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Hold time", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
+    
+	local hold = GPnl.AddPanel( holdlabel, "textentry" )
+	hold:SetSize( size * 2, 64 * ratio )
+	hold:SetPos( w - size * 2 - pad, 0 )
+    hold:SetFont( "GPMedium" )
+    hold:SetBackColor( Color(0, 0, 0, 0) )
+	hold:SetText( math.Round(GetConVar("gphone_holdtime"):GetFloat(), 2) )
+    hold:SetAlignment( TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
 	function hold:OnEnter( val )
 		if tonumber(val) then
 			self:SetText( val )
@@ -143,31 +167,57 @@ function APP.Run( frame, w, h, ratio )
 		draw.SimpleText("Use AM/PM", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 	
-	local pad = 8 * ratio
-	local size = 64 * ratio - pad*2
 	local toggle = GPnl.AddPanel( ampm, "toggle" )
 	toggle:SetSize( size*2, size )
 	toggle:SetPos( w - size*2 - pad, pad )
-	if GetConVar("gphone_ampm"):GetBool() then
+	if GPhone.GetData("ampm", false) then
 		toggle:SetToggle( true )
 	end
-	function toggle:OnChange( bool )
-		RunConsoleCommand("gphone_ampm", bool and 1 or 0)
+    function toggle:OnChange( bool )
+        GPhone.SetData("ampm", bool)
 	end
 	
 	space = space + 64 * ratio
 	
-	local rows = GPnl.AddPanel( scroll, "textentry" )
-	rows:SetSize( w, 64 * ratio )
-	rows:SetPos( 0, space )
-	rows:SetText( GetConVar("gphone_rows"):GetInt() )
-	function rows:Paint( x, y, w, h )
+	local murica = GPnl.AddPanel( scroll, "panel" )
+	murica:SetSize( w, 64 * ratio )
+	murica:SetPos( 0, space )
+	function murica:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 		
-		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
-		draw.SimpleText("App rows: "..text, self:GetFont(), mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Use imperial units", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
+	
+	local toggle = GPnl.AddPanel( murica, "toggle" )
+	toggle:SetSize( size*2, size )
+	toggle:SetPos( w - size*2 - pad, pad )
+	if GPhone.GetData("imperial", false) then
+		toggle:SetToggle( true )
+	end
+    function toggle:OnChange( bool )
+        GPhone.SetData("imperial", bool)
+	end
+	
+	space = space + 64 * ratio
+	
+	local rowlabel = GPnl.AddPanel( scroll, "panel" )
+	rowlabel:SetSize( w, 64 * ratio )
+	rowlabel:SetPos( 0, space )
+	function rowlabel:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		draw.SimpleText("App rows", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+    
+	local rows = GPnl.AddPanel( rowlabel, "textentry" )
+	rows:SetSize( size * 2, 64 * ratio )
+	rows:SetPos( w - size * 2 - pad, 0 )
+    rows:SetFont( "GPMedium" )
+    rows:SetBackColor( Color(0, 0, 0, 0) )
+	rows:SetText( GetConVar("gphone_rows"):GetInt() )
+    rows:SetAlignment( TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
 	function rows:OnEnter( val )
 		local val = tonumber(val)
 		if val then
@@ -179,17 +229,23 @@ function APP.Run( frame, w, h, ratio )
 	
 	space = space + 64 * ratio
 	
-	local brightness = GPnl.AddPanel( scroll, "textentry" )
-	brightness:SetSize( w, 64 * ratio )
-	brightness:SetPos( 0, space )
-	brightness:SetText( math.Round(GetConVar("gphone_brightness"):GetFloat()*100) )
-	function brightness:Paint( x, y, w, h )
+	local brightlabel = GPnl.AddPanel( scroll, "panel" )
+	brightlabel:SetSize( w, 64 * ratio )
+	brightlabel:SetPos( 0, space )
+	function brightlabel:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
 		
-		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
-		draw.SimpleText("Brightness: "..text.."%", self:GetFont(), mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Brightness", "GPMedium", mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
+    
+	local brightness = GPnl.AddPanel( brightlabel, "textentry" )
+	brightness:SetSize( size * 2, 64 * ratio )
+	brightness:SetPos( w - size * 2 - pad, 0 )
+    brightness:SetFont( "GPMedium" )
+    brightness:SetBackColor( Color(0, 0, 0, 0) )
+	brightness:SetText( math.Round(GetConVar("gphone_brightness"):GetFloat() * 100) )
+    brightness:SetAlignment( TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
 	function brightness:OnEnter( val )
 		local val = tonumber(val)
 		if val then
@@ -203,11 +259,19 @@ function APP.Run( frame, w, h, ratio )
 	
 	local wallpaper = GPnl.AddPanel( scroll, "textentry" )
 	wallpaper:SetSize( w, 64 * ratio )
-	wallpaper:SetPos( 0, space )
-	wallpaper:SetText( "Change wallpaper" )
+    wallpaper:SetPos( 0, space )
+    wallpaper:SetFont("GPMedium")
+	wallpaper:SetText( "" )
+	function wallpaper:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
+		
+		local text = self.b_typing and GPhone.GetInputText() or "Change wallpaper"
+		draw.SimpleText(text, self:GetFont(), mar, h/2, Color(70, 70, 70), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
 	function wallpaper:OnEnter( path )
         GPhone.SetData("background", path)
-        GPhone.BackgroundMat = Material(path, "smooth")
+        self:SetText( "" )
 	end
 	
 	local header = GPnl.AddPanel( appearance )
@@ -460,8 +524,57 @@ function APP.Run( frame, w, h, ratio )
 	function back:Paint( x, y, w, h )
 		draw.SimpleText("<", "GPTitle", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
+    
+    
+    local system = frame:AddTab( "system", "panel" )
 	
+	local scroll = GPnl.AddPanel( system, "scroll" )
+	scroll:SetPos( 0, 64 * ratio )
+	scroll:SetSize( w, h - 64 * ratio )
+    
+    local number = GPnl.AddPanel( scroll )
+	number:SetSize( w, 64 * ratio )
+	number:SetPos( 0, 12 * ratio )
+	function number:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80 ) )
+		
+		draw.SimpleText("Phone Number: "..LocalPlayer():AccountID(), "GPMedium", mar, h/2, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+    
+    local copy = GPnl.AddPanel( number )
+	copy:SetSize( 80 * ratio, 64 * ratio )
+	copy:SetPos( w - 80 * ratio, 0 )
+	function copy:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 80, 80, 80 ) )
+		draw.RoundedBox( 0, 2, 2, w-4, h-4, Color( 255, 255, 255 ) )
+		
+		draw.SimpleText("Copy", "GPSmall", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	function copy:OnClick()
+		SetClipboardText( LocalPlayer():AccountID() )
+    end
 	
+	local header = GPnl.AddPanel( system )
+	header:SetPos( 0, 0 )
+	header:SetSize( w, 64 * ratio )
+	function header:Paint( x, y, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80 ) )
+		
+		draw.SimpleText("System", "GPTitle", w/2, h/2, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	
+	local back = GPnl.AddPanel( header )
+	back:SetPos( 0, 0 )
+	back:SetSize( 64 * ratio, 64 * ratio )
+	function back:OnClick()
+		frame:OpenTab( "home", 0.25, "in-left", "out-right" )
+	end
+	function back:Paint( x, y, w, h )
+		draw.SimpleText("<", "GPTitle", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+    
 	
 	local about = frame:AddTab( "about", "panel" )
 	
@@ -484,8 +597,8 @@ function APP.Run( frame, w, h, ratio )
 		draw.SimpleText("Created by Krede", "GPMedium", h + 4, 42 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		if self.Update then
-			draw.SimpleText("Last update:", "GPMedium", h + 4, h - 36*2 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(self.Update, "GPMedium", h + 4, h - 36 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText("Last update:", "GPSmall", h + 4, h - 36*2 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(self.Update, "GPSmall", h + 4, h - 36 * ratio, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		end
 	end
 	

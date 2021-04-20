@@ -1,6 +1,6 @@
 APP.Name	= "Camera"
 APP.Author	= "Krede"
-APP.Icon	= "https://raw.githubusercontent.com/KredeGC/GPhone/master/images/camera.png"
+APP.Icon        = "asset://garrysmod/materials/gphone/apps/camera.png"
 function APP.Run( frame, w, h, ratio )
 	frame:SetFullScreen( true )
 	local h = frame.h

@@ -3,8 +3,11 @@ APP.Author		= "Krede"
 APP.Negative	= true
 APP.Icon		= "asset://garrysmod/materials/gphone/apps/notes.png"
 function APP.Run( frame, w, h, ratio )
-	function frame:Paint( x, y, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 247, 244, 180, 255 ) )
+    function frame:Paint( x, y, w, h )
+        draw.RoundedBox( 0, 0, 0, w, 62 * ratio, Color( 77, 54, 41, 255 ) )
+		draw.RoundedBox( 0, 0, 62 * ratio, w, 2 * ratio, Color( 80, 80, 80, 255 ) )
+        
+		draw.RoundedBox( 0, 0, 64 * ratio, w, h - 64 * ratio, Color( 247, 244, 180, 255 ) )
 	end
 	
 	function frame.Open( ind )
@@ -14,64 +17,38 @@ function APP.Run( frame, w, h, ratio )
 		local num = ind or table.Count(notes) + 1
 		local data = notes[ind] or {}
 		
-		local text = GPnl.AddPanel( frame )
+		local text = GPnl.AddPanel( frame, "textentry" )
 		text:SetPos( 0, 64 * ratio )
-		text:SetSize( w, h - 64 * ratio )
-		text.text = data.text or ""
-		function text:OnClick()
-			text.b_typing = true
-			local function onEnter( val )
-				text.b_typing = false
-				local notes = GPhone.GetAppData("notes") or {}
-				local note = notes[num] or {title = "", text = ""}
-				note.text = val
-				text.text = val
-				notes[num] = note
-				GPhone.SetAppData("notes", notes)
-			end
-			function onCancel()
-				text.b_typing = false
-			end
-			GPhone.InputText( onEnter, onEnter, onCancel, text.text )
-		end
-		function text:Paint( x, y, w, h )
-			if text.b_typing then
-				draw.SimpleText(GPhone.GetInputText(), "GPMedium", 4, 4, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			else
-				draw.SimpleText(text.text, "GPMedium", 4, 4, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			end
-		end
+        text:SetSize( w, h - 64 * ratio )
+        text:SetFont( "GPMedium" )
+        text:SetBackColor( Color(0, 0, 0, 0) )
+        text:SetText( data.text )
+        text:SetAlignment( TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+        function text:OnEnter( val )
+            self:SetText(val)
+            local notes = GPhone.GetAppData("notes") or {}
+            local note = notes[num] or {title = "Untitled", text = ""}
+            note.text = val
+            notes[num] = note
+            GPhone.SetAppData("notes", notes)
+        end
 		
-		local header = GPnl.AddPanel( frame )
+		local header = GPnl.AddPanel( frame, "textentry" )
 		header:SetPos( 0, 0 )
 		header:SetSize( w, 64 * ratio )
-		header.title = data.title or "Untitled"
-		function header:OnClick()
-			header.b_typing = true
-			local function onEnter( val )
-				header.b_typing = false
-				local notes = GPhone.GetAppData("notes") or {}
-				local note = notes[num] or {title = "", text = ""}
-				note.title = val
-				header.title = val
-				notes[num] = note
-				GPhone.SetAppData("notes", notes)
-			end
-			function onCancel()
-				header.b_typing = false
-			end
-			GPhone.InputText( onEnter, onEnter, onCancel, header.title )
-		end
-		function header:Paint( x, y, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 77, 54, 41, 255 ) )
-			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
-			
-			if header.b_typing then
-				draw.SimpleText(GPhone.GetInputText(), "GPTitle", w/2, h/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-			else
-				draw.SimpleText(header.title, "GPTitle", w/2, h/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-			end
-		end
+        header:SetFont( "GPTitle" )
+        header:SetForeColor( Color(255, 255, 255) )
+        header:SetBackColor( Color(0, 0, 0, 0) )
+        header:SetText( data.title or "Untitled" )
+        header:SetAlignment( TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+        function header:OnEnter( val )
+            header:SetText(val)
+            local notes = GPhone.GetAppData("notes") or {}
+            local note = notes[num] or {title = "", text = ""}
+            note.title = val
+            notes[num] = note
+            GPhone.SetAppData("notes", notes)
+        end
 		
 		local back = GPnl.AddPanel( header )
 		back:SetPos( 0, 0 )
@@ -136,9 +113,6 @@ function APP.Run( frame, w, h, ratio )
 		header:SetPos( 0, 0 )
 		header:SetSize( w, 64 * ratio )
 		function header:Paint( x, y, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h-2, Color( 77, 54, 41, 255 ) )
-			draw.RoundedBox( 0, 0, h-2, w, 2, Color( 80, 80, 80, 255 ) )
-			
 			draw.SimpleText("Notes", "GPTitle", w/2, h/2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 		

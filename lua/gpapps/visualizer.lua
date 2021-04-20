@@ -27,8 +27,8 @@ function APP.Run( frame, w, h, ratio )
 	local pad = 8 * ratio
 	local size = 64 * ratio - pad*2
 	local toggle = GPnl.AddPanel( enable, "toggle" )
-	toggle:SetSize( size*2, size )
-	toggle:SetPos( w - size*2 - pad, pad )
+	toggle:SetSize( size * 2, size )
+	toggle:SetPos( w - size * 2 - pad, pad )
 	toggle:SetToggle( GPhone.GetAppData("enable", false) )
 	toggle:SetNegative( true )
 	function toggle:OnChange( bool )
@@ -36,19 +36,26 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	space = space + 64 * ratio
-	
-	local size = GPnl.AddPanel( scroll, "textentry" )
-	size:SetSize( w, 64 * ratio )
-	size:SetPos( 0, space )
-	size:SetText( GPhone.GetAppData("size", 4) )
-	function size:Paint( x, y, w, h )
+    
+    local barlabel = GPnl.AddPanel( scroll, "panel" )
+	barlabel:SetSize( w, 64 * ratio )
+	barlabel:SetPos( 0, space )
+	function barlabel:Paint( x, y, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h-2, Color( 60, 60, 150, 255 ) )
 		draw.RoundedBox( 0, 0, h-2, w, 2, Color( 25, 25, 100, 255 ) )
 		
-		local text = self.b_typing and GPhone.GetInputText() or self:GetText()
-		draw.SimpleText("Size: "..text, self:GetFont(), mar, h/2, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Size", "GPMedium", mar, h/2, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
-	function size:OnEnter( val )
+    
+	local bar = GPnl.AddPanel( barlabel, "textentry" )
+	bar:SetSize( size * 2, 64 * ratio )
+	bar:SetPos( w - size * 2 - pad, 0 )
+    bar:SetFont( "GPMedium" )
+    bar:SetForeColor( Color(255, 255, 255) )
+    bar:SetBackColor( Color(0, 0, 0, 0) )
+    bar:SetText( GPhone.GetAppData("size", 4) )
+    bar:SetAlignment( TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
+	function bar:OnEnter( val )
 		local val = tonumber(val)
 		if val then
 			local num = math.Clamp(val, 1, 20)

@@ -73,7 +73,6 @@ function APP.Run( frame, w, h, ratio )
 		function wallpaper:OnClick()
 			if file.Exists(pic, "DATA") then
                 GPhone.SetData("background", "data/"..pic)
-                GPhone.BackgroundMat = Material("data/"..pic, "smooth")
 			end
 		end
 		

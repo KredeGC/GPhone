@@ -65,32 +65,32 @@ function APP.Run( frame, w, h, ratio )
 	
 	local url = GPnl.AddPanel( header, "textentry" )
 	url:SetPos( 6 * ratio + size, 6 * ratio )
-	url:SetSize( w - size*2 - 12 * ratio, size - 12 * ratio )
-	function url:Paint( x, y, w, h )
-		draw.RoundedBox( 4, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
-		
-		local text = self.b_typing and GPhone.GetInputText() or frame.content:GetTitle()
-		if text then
-			surface.SetFont("GPMedium")
-			local size = surface.GetTextSize(text)
-			
-			if size > w-8 then
-				draw.SimpleText(text, "GPMedium", w-4, h/2, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-			elseif self.b_typing then
-				draw.SimpleText(text, "GPMedium", 4, h/2, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-			else
-				draw.SimpleText(text, "GPMedium", w/2, h/2, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-			end
-		end
-	end
+    url:SetSize( w - size*2 - 12 * ratio, size - 12 * ratio )
+    url:SetFont("GPMedium")
+    url:SetBackColor( Color(220, 220, 220) )
+    url:SetText( frame.content:GetTitle() )
+    url:SetAlignment( TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	function url:OnClick()
-		self.b_typing = true
+        self.b_typing = true
+        self:SetAlignment( TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
 		local html = frame.content:GetHTML()
 		local text = IsValid(html) and html.URL or ""
 		GPhone.InputText( self.Enter, self.Change, self.Cancel, text )
 	end
-	function url:OnEnter( link )
-		frame:OpenURL( link )
+    function url:OnEnter( link )
+        self:SetAlignment( TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+        if string.StartWith(link, "http://") or string.StartWith(link, "https://") or string.StartWith(link, "www.") then
+            frame:OpenURL( link )
+        else
+            frame:OpenURL( "https://www.google.com/search?q="..link )
+        end
+    end
+    function url:OnCancel()
+        self:SetAlignment( TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+    end
+	function url:Paint( x, y, w, h )
+		local text = self.b_typing and GPhone.GetInputText() or frame.content:GetTitle()
+        self:RenderText( x, y, w, h, text )
 	end
 	
 	local footer = GPnl.AddPanel( frame, "panel" )

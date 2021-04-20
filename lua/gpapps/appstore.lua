@@ -67,7 +67,7 @@ function APP.Run( frame, w, h, ratio )
 				local x = GPhone.RootToLocal( self, GPhone.GetCursorPos() )
 				local rate = math.Clamp( math.ceil( x / self:GetWidth() * 5 ), 1, 5 )
 				
-				http.Post("http://gphone.icu/api/vote",
+				http.Post("https://gphone.icu/api/vote",
 					{
 						id = self.Id,
 						app = self.App,
@@ -96,14 +96,16 @@ function APP.Run( frame, w, h, ratio )
 		
 		local install = GPnl.AddPanel( page )
 		install:SetSize( 120 * ratio, 40 * ratio )
-		install:SetPos( w - (120 + 25) * ratio, 52 * ratio )
+        install:SetPos( w - (120 + 25) * ratio, 52 * ratio )
+        install.clicked = false
 		function install:Paint( x, y, w, h )
 			draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
 			draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
-			local text = table.HasValue(GPhone.Data.apps, page.App) and "Uninstall" or "Install"
+			local text = table.HasValue(GPhone.Data.apps, page.App) and "Uninstall" or self.clicked and "Installing" or "Install"
 			draw.SimpleText(text, "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
-		function install:OnClick()
+        function install:OnClick()
+            self.clicked = true
 			click( page, self )
 		end
 		
@@ -154,7 +156,7 @@ function APP.Run( frame, w, h, ratio )
 					return true
 				end
 				
-				http.Fetch("http://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(body, size, headers)
+				http.Fetch("https://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(body, size, headers)
 					code:SetText(string.gsub(body, "	", "    "))
 				end,
 				function(err)
@@ -197,14 +199,16 @@ function APP.Run( frame, w, h, ratio )
 		
 		local install = GPnl.AddPanel( but )
 		install:SetSize( 120 * ratio, 40 * ratio )
-		install:SetPos( w - (120 + 25) * ratio, 35 * ratio )
+        install:SetPos( w - (120 + 25) * ratio, 35 * ratio )
+        install.clicked = false
 		function install:Paint( x, y, w, h )
 			draw.RoundedBox(0, 0, 0, w, h, Color(15, 200, 90))
 			draw.RoundedBox(0, 4, 4, w-8, h-8, Color(255, 255, 255))
-			local text = table.HasValue(GPhone.Data.apps, but.App) and "Uninstall" or "Install"
+			local text = table.HasValue(GPhone.Data.apps, but.App) and "Uninstall" or self.clicked and "Installing" or "Install"
 			draw.SimpleText(text, "GPMedium", w/2, h/2, Color(15, 200, 90), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 		function install:OnClick()
+            self.clicked = true
 			click( but, self )
 		end
 		
@@ -212,7 +216,7 @@ function APP.Run( frame, w, h, ratio )
 	end
 	
 	local function addOnlineButton(name, app, click)
-		local url = "http://gphone.icu/api/list?app="..app.App.."&id="..app.Id
+		local url = "https://gphone.icu/api/list?app="..app.App.."&id="..app.Id
 		local name = GPhone.SerializeAppName(url)
 		local but = addbutton(name, app, function(but)
 			click( but, self )
@@ -259,7 +263,7 @@ function APP.Run( frame, w, h, ratio )
 				local x = GPhone.RootToLocal( self, GPhone.GetCursorPos() )
 				local rate = math.Clamp( math.ceil( x / self:GetWidth() * 5 ), 1, 5 )
 				
-				http.Post("http://gphone.icu/api/vote",
+				http.Post("https://gphone.icu/api/vote",
 					{
 						id = self.Id,
 						app = self.App,
@@ -502,7 +506,7 @@ function APP.Run( frame, w, h, ratio )
 	
 	function fetchOnlineApps(force)
 		if force or GetConVar("gphone_csapp"):GetBool() then
-			http.Fetch("http://gphone.icu/api/list", function(body, size, headers, code)
+			http.Fetch("https://gphone.icu/api/list", function(body, size, headers, code)
 				local tbl = util.JSONToTable(body)
 				if type(tbl) == "table" then
 					frame.online = tbl
@@ -510,7 +514,7 @@ function APP.Run( frame, w, h, ratio )
 						if app.Icon then
 							GPhone.DownloadImage( app.Icon, 128, "background-color: #FFF; border-radius: 32px 32px 32px 32px" )
 						end
-						GPhone.UpdateApp("http://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(content)
+						GPhone.UpdateApp("https://gphone.icu/api/list?app="..app.App.."&id="..app.Id, function(content)
 							app.Update = true
 						end)
 					end
@@ -525,7 +529,7 @@ function APP.Run( frame, w, h, ratio )
 				print(err)
 			end)
 		else
-			if game.SinglePlayer() or !game.IsDedicated() && LocalPlayer() == player.GetAll()[1] then
+			if game.SinglePlayer() or LocalPlayer():IsAdmin() then
 				local info = GPnl.AddPanel( online )
 				info:SetSize( w, 160 * ratio )
 				info:SetPos( 0, online:GetHeight() / 2 - 80 * ratio )
@@ -546,14 +550,15 @@ function APP.Run( frame, w, h, ratio )
 				end
 				function agree:OnClick()
 					RunConsoleCommand("gphone_csapp", "1")
-					fetchOnlineApps(true)
+                    fetchOnlineApps(true)
+                    self:Remove()
 				end
 			else
 				local info = GPnl.AddPanel( online )
 				info:SetSize( w, 80 * ratio )
 				info:SetPos( 0, online:GetHeight() / 2 - 40 * ratio )
 				function info:Paint( x, y, w, h )
-					draw.SimpleText("The owner of this server has disabled", "GPMedium", w/2, 0, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+					draw.SimpleText("The staff of this server have not enabled", "GPMedium", w/2, 0, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 					draw.SimpleText("the download and use of online apps", "GPMedium", w/2, h, Color(70, 70, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
 				end
 			end
