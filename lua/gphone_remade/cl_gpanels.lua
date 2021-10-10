@@ -37,6 +37,7 @@ function gframe:new( parent, kind )
     
     function frame:SetVisible( bool )
         self.visible = bool
+        return self
     end
     function frame:GetVisible()
         return self.visible
@@ -44,6 +45,7 @@ function gframe:new( parent, kind )
     
     function frame:SetType( str )
         self.type = str
+        return self
     end
     function frame:GetType()
         return self.type
@@ -52,16 +54,20 @@ function gframe:new( parent, kind )
     function frame:SetPos( x, y )
         self.x = x
         self.y = y
+        return self
     end
     function frame:SetWidth( w )
         self.w = w
+        return self
     end
     function frame:SetHeight( h )
         self.h = h
+        return self
     end
     function frame:SetSize( w, h )
         self.w = w
         self.h = h
+        return self
     end
     
     function frame:GetWidth()
@@ -103,6 +109,7 @@ function gframe:new( parent, kind )
             removeChildren( child )
         end
         self.children = {}
+        return self
     end
     function frame:Remove()
         removeChildren( self )
@@ -112,6 +119,7 @@ function gframe:new( parent, kind )
                 table.RemoveByValue(children, self)
             end
         end
+        return self
     end
     
     function frame:Paint()
@@ -183,6 +191,7 @@ local paneltypes = {
                 pnl:Remove()
                 self.b_tabs[name] = nil
             end
+            return self
         end
         
         function frame:GetTabs()
@@ -236,6 +245,7 @@ local paneltypes = {
         
         function frame:SetToggle( bool )
             self.b_toggled = bool
+            return self
         end
         function frame:GetToggle()
             return self.b_toggled or false
@@ -243,6 +253,7 @@ local paneltypes = {
         
         function frame:SetNegative( bool )
             self.b_negative = bool
+            return self
         end
         function frame:GetNegative()
             return self.b_negative or false
@@ -259,6 +270,7 @@ local paneltypes = {
     ["scroll"] = function(frame)
         function frame:SetScrollSpeed( num )
             self.i_speed = num
+            return self
         end
         function frame:GetScrollSpeed()
             return (self.i_speed or 30) * GPhone.Resolution
@@ -288,12 +300,14 @@ local paneltypes = {
         
         function frame:SetText( val )
             self.b_text = val
+            return self
         end
         function frame:GetText()
             return self.b_text or ""
         end
         function frame:SetFont( font )
             self.f_font = font
+            return self
         end
         function frame:GetFont()
             return self.f_font or "GPMedium"
@@ -302,6 +316,7 @@ local paneltypes = {
         function frame:SetAlignment( hor, ver )
             frame.b_alignmenth = hor
             frame.b_alignmentv = ver
+            return self
         end
         function frame:GetAlignment()
             return frame.b_alignmenth,frame.b_alignmentv
@@ -309,18 +324,21 @@ local paneltypes = {
         
         function frame:SetForeColor( color )
             self.b_forecolor = color
+            return self
         end
         function frame:GetForeColor()
             return self.b_forecolor
         end
         function frame:SetBackColor( color )
             self.b_backcolor = color
+            return self
         end
         function frame:GetBackColor()
             return self.b_backcolor
         end
         function frame:SetSelectionColor( color )
             self.b_selccolor = color
+            return self
         end
         function frame:GetSelectionColor()
             return self.b_selccolor
@@ -449,6 +467,7 @@ local paneltypes = {
             end
             local w,h = self:GetSize()
             self.d_html = GPhone.CreateHTMLPanel( w, h, url )
+            return self
         end
         
         function frame:GetHTML()
@@ -471,6 +490,7 @@ local paneltypes = {
         
         function frame:OpenURL( url )
             self.d_html:OpenURL( url )
+            return self
         end
         
         function frame:OnClick()

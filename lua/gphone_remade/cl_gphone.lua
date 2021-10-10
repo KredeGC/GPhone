@@ -1510,7 +1510,7 @@ function GPhone.UpdateHTMLControl(html)
         print("[GPhone][HTML] "..str)
     end)
     
-    html:AddFunction("gmod", "run", function( ...) -- I don't even need this but whatever
+    --[[html:AddFunction("gmod", "run", function( ...) -- I don't even need this but whatever
         local code = string.Implode(" ", { ... })
         if code != "" then
             this = html
@@ -1520,7 +1520,7 @@ function GPhone.UpdateHTMLControl(html)
             end
             this = nil
         end
-    end)
+    end)]]
     
     html:AddFunction("gmod", "isAwesomium", function( str)
         local bool = tobool(str)
@@ -1541,7 +1541,7 @@ function GPhone.UpdateHTMLControl(html)
                     <p>I would <b>HIGHLY</b> suggest switching to the Chromium branch due to the Awesomium browser being very old and unsupported on many sites.</p>
                     <img src="https://raw.githubusercontent.com/KredeGC/GPhone/master/tutorial/chromium.png" width="100%" />
                     <p>This can be done by right-clicking Garry's Mod in your Steam Library and selecting properties.
-                    <br>In the properties-window, navigate to the 'BETAS' tab and select 'chromium -' from the dropdown.</p>
+                    <br>In the properties-window, navigate to the 'BETAS' tab and select 'x86-64 - Chromium + 64-bit binaries' from the dropdown.</p>
                     <p>If you <b>DON'T</b> want to switch to Chromium, click <a style="color: #ffffff; text-decoration: none;" href="javascript:gmod.run('this:GoBack() this.Title=\'Google\' RunConsoleCommand(\'gphone_chromium\', 0)');">HERE</a> to turn off this notification and continue.</p>
                 </body>
             </html>]])
